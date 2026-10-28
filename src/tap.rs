@@ -279,7 +279,7 @@ impl ProcessTap {
             desc.context("CATapDescription init failed")?
         };
         let tap_uid = unsafe {
-            let name = NSString::from_str("console-demo-screen");
+            let name = NSString::from_str("soundscene");
             let _: () = msg_send![&*desc, setName: &*name];
             let _: () = msg_send![&*desc, setPrivate: true];
             // macOS 26: re-attach when the app restarts its audio process.
@@ -304,8 +304,8 @@ impl ProcessTap {
         ]);
         let sub_device = CFDictionary::from_CFType_pairs(&[(key("uid"), CFString::new(&output_uid).as_CFType())]);
         let aggregate = CFDictionary::from_CFType_pairs(&[
-            (key("name"), CFString::new("console-demo-screen tap").as_CFType()),
-            (key("uid"), CFString::new(&format!("console-demo-screen-{}", std::process::id())).as_CFType()),
+            (key("name"), CFString::new("soundscene tap").as_CFType()),
+            (key("uid"), CFString::new(&format!("soundscene-{}", std::process::id())).as_CFType()),
             (key("master"), CFString::new(&output_uid).as_CFType()),
             (key("private"), CFBoolean::true_value().as_CFType()),
             (key("stacked"), CFBoolean::false_value().as_CFType()),

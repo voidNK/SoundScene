@@ -1,5 +1,5 @@
 [package]
-name = "console-demo-screen"
+name = "soundscene"
 version = "0.1.0"
 edition = "2024"
 
@@ -13,6 +13,7 @@ rustfft = "6.2"
 [profile.release]
 lto = true
 codegen-units = 1
+strip = true
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation = "0.10"

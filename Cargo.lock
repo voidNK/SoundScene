@@ -247,20 +247,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "console-demo-screen"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "core-foundation",
- "cpal",
- "crossterm",
- "objc2",
- "objc2-foundation",
- "rustfft",
-]
-
-[[package]]
 name = "core-foundation"
 version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1017,6 +1003,20 @@ name = "smallvec"
 version = "1.16.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d0d5d4b1981b8bbbb7aed204cae5726d683d5d6ac7e74ec54122ea28f315e7c8"
+
+[[package]]
+name = "soundscene"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "core-foundation",
+ "cpal",
+ "crossterm",
+ "objc2",
+ "objc2-foundation",
+ "rustfft",
+]
 
 [[package]]
 name = "strength_reduce"

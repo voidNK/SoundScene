@@ -55,6 +55,28 @@ impl Canvas {
         }
     }
 
+    /// Bounds-checked overwrite.
+    pub fn plot(&mut self, x: i32, y: i32, c: Rgb) {
+        if x >= 0 && y >= 0 && (x as usize) < self.w && (y as usize) < self.h {
+            self.px[y as usize * self.w + x as usize] = c;
+        }
+    }
+
+    /// Caller guarantees `x < w` and `y < h`.
+    #[inline]
+    pub fn get(&self, x: usize, y: usize) -> Rgb {
+        self.px[y * self.w + x]
+    }
+
+    /// Copies `src` with its top-left corner at (x0, y0), clipped to this canvas.
+    pub fn blit(&mut self, src: &Canvas, x0: usize, y0: usize) {
+        let n = src.w.min(self.w.saturating_sub(x0));
+        for y in 0..src.h.min(self.h.saturating_sub(y0)) {
+            let dst = (y0 + y) * self.w + x0;
+            self.px[dst..dst + n].copy_from_slice(&src.px[y * src.w..y * src.w + n]);
+        }
+    }
+
     pub fn line_add(&mut self, x0: f32, y0: f32, x1: f32, y1: f32, c: Rgb) {
         let steps = (x1 - x0).abs().max((y1 - y0).abs()).ceil().clamp(1.0, 2000.0) as i32;
         for i in 0..=steps {
@@ -91,6 +113,13 @@ pub fn hsv(h: f32, s: f32, v: f32) -> Rgb {
         _ => (v, p, q),
     };
     rgb(r, g, b)
+}
+
+/// Linear blend from `a` (t = 0) to `b` (t = 1).
+pub fn mix(a: Rgb, b: Rgb, t: f32) -> Rgb {
+    let t = t.clamp(0.0, 1.0);
+    let l = |x: u8, y: u8| (x as f32 + (y as f32 - x as f32) * t) as u8;
+    [l(a[0], b[0]), l(a[1], b[1]), l(a[2], b[2])]
 }
 
 pub fn scale(c: Rgb, k: f32) -> Rgb {

@@ -2,6 +2,7 @@ mod analysis;
 mod audio;
 mod effects;
 mod gfx;
+mod setup;
 #[cfg(target_os = "macos")]
 mod tap;
 mod term;
@@ -17,7 +18,8 @@ use std::io::{self, Write};
 use std::time::{Duration, Instant};
 
 /// Sound-reactive demo effects in the terminal.
-/// Keys: ←/→ switch effect, h toggle HUD, q/Esc quit.
+/// Run without arguments for an interactive setup.
+/// Keys: ←/→ switch effect, m mosaic, h toggle HUD, q/Esc quit.
 #[derive(Parser)]
 #[command(version)]
 struct Args {
@@ -55,6 +57,10 @@ struct Args {
     #[arg(long, default_value_t = 30)]
     fps: u32,
 
+    /// Show several effects at once in an N×N grid (1 = single effect)
+    #[arg(long, value_name = "N", default_value_t = 1, value_parser = clap::value_parser!(u8).range(1..=4))]
+    mosaic: u8,
+
     /// Print raw and normalized audio levels for N seconds instead of
     /// starting the TUI (for checking that the input carries signal)
     #[arg(long, value_name = "SECONDS")]
@@ -63,6 +69,14 @@ struct Args {
 
 fn main() -> Result<()> {
     let args = Args::parse();
+    if std::env::args_os().len() == 1 {
+        let _guard = TerminalGuard::enter()?;
+        let Some((source, args)) = setup::run(args)? else {
+            return Ok(());
+        };
+        let delay = (args.delay * source.sample_rate as u64 / 1000) as usize;
+        return run(&args, &source, delay);
+    }
     if args.list_devices {
         return audio::list_devices();
     }
@@ -132,6 +146,10 @@ fn run(args: &Args, source: &AudioSource, delay: usize) -> Result<()> {
     let mut frame = Vec::new();
     let mut show_hud = true;
     let mut clear_frames = 0u8;
+    // Grid size; 1 = a single effect. Each mosaic tile keeps its own canvas
+    // so effects with trails don't smear into each other.
+    let mut mosaic = args.mosaic as usize;
+    let mut tiles: Vec<Canvas> = Vec::new();
 
     let interval = Duration::from_secs(args.interval.max(1));
     let frame_time = Duration::from_secs_f64(1.0 / args.fps.clamp(5, 240) as f64);
@@ -148,9 +166,14 @@ fn run(args: &Args, source: &AudioSource, delay: usize) -> Result<()> {
                     continue;
                 }
                 match k.code {
-                    KeyCode::Right => step = 1,
-                    KeyCode::Left => step = -1,
+                    KeyCode::Right => step += 1,
+                    KeyCode::Left => step -= 1,
                     KeyCode::Char('h') => show_hud = !show_hud,
+                    KeyCode::Char('m') => {
+                        mosaic = if mosaic >= 3 { 1 } else { mosaic + 1 };
+                        tiles.clear();
+                        canvas.clear();
+                    }
                     KeyCode::Char('q') | KeyCode::Esc => return Ok(()),
                     KeyCode::Char('c') if k.modifiers.contains(KeyModifiers::CONTROL) => {
                         return Ok(());
@@ -164,10 +187,12 @@ fn run(args: &Args, source: &AudioSource, delay: usize) -> Result<()> {
         if step == 0 && now.duration_since(switched) >= interval {
             step = 1;
         }
+        let page = mosaic * mosaic;
         if step != 0 {
-            current = (current as i32 + step).rem_euclid(effects.len() as i32) as usize;
+            current = (current as i32 + step * page as i32).rem_euclid(effects.len() as i32) as usize;
             switched = now;
             canvas.clear();
+            tiles.iter_mut().for_each(Canvas::clear);
         }
 
         let dt = now.duration_since(last).as_secs_f32().min(0.1);
@@ -186,16 +211,25 @@ fn run(args: &Args, source: &AudioSource, delay: usize) -> Result<()> {
         }
         let clear = clear_frames > 0;
         clear_frames = clear_frames.saturating_sub(1);
-        let effect = &mut effects[current];
-        effect.render(&mut canvas, t, dt, &analyzer.features);
+        if mosaic == 1 {
+            effects[current].render(&mut canvas, t, dt, &analyzer.features);
+        } else {
+            render_mosaic(&mut canvas, &mut tiles, mosaic, &mut effects, current, t, dt, &analyzer.features);
+        }
 
         let hud = show_hud.then(|| {
-            let remaining = interval.saturating_sub(now.duration_since(switched)).as_secs();
+            let total = effects.len();
+            let (title, names) = if mosaic == 1 {
+                (format!("{}/{} {}", current + 1, total, effects[current].name()), String::new())
+            } else {
+                let names: Vec<&str> = (0..page).map(|i| effects[(current + i) % total].name()).collect();
+                let last = (current + page - 1) % total + 1;
+                (format!("{}–{last}/{total} {mosaic}×{mosaic}", current + 1), names.join(" · "))
+            };
             let info = HudInfo {
-                index: current,
-                total: effects.len(),
-                name: effects[current].name(),
-                remaining,
+                title,
+                names,
+                remaining: interval.saturating_sub(now.duration_since(switched)).as_secs(),
                 source: &source.label,
             };
             hud_line(cols as usize, &info, &analyzer.features)
@@ -210,10 +244,47 @@ fn run(args: &Args, source: &AudioSource, delay: usize) -> Result<()> {
     }
 }
 
+/// Splits the canvas into an n×n grid and renders consecutive effects
+/// (starting at `first`) into the tiles, with a 1-pixel gap between them.
+#[allow(clippy::too_many_arguments)]
+fn render_mosaic(
+    canvas: &mut Canvas,
+    tiles: &mut Vec<Canvas>,
+    n: usize,
+    effects: &mut [Box<dyn effects::Effect>],
+    first: usize,
+    t: f32,
+    dt: f32,
+    f: &Features,
+) {
+    tiles.resize_with(n * n, Canvas::new);
+    canvas.clear();
+    // Tile rows are aligned to whole terminal cells (2 pixels).
+    let cell_rows = canvas.h / 2;
+    for row in 0..n {
+        for col in 0..n {
+            let x0 = col * canvas.w / n;
+            let x1 = (col + 1) * canvas.w / n;
+            let y0 = row * cell_rows / n * 2;
+            let y1 = (row + 1) * cell_rows / n * 2;
+            let w = (x1 - x0).saturating_sub((col + 1 < n) as usize);
+            let h = (y1 - y0).saturating_sub((row + 1 < n) as usize);
+            let tile = &mut tiles[row * n + col];
+            tile.resize(w, h);
+            if w < 2 || h < 2 {
+                continue;
+            }
+            let index = (first + row * n + col) % effects.len();
+            effects[index].render(tile, t, dt, f);
+            canvas.blit(tile, x0, y0);
+        }
+    }
+}
+
 struct HudInfo<'a> {
-    index: usize,
-    total: usize,
-    name: &'a str,
+    title: String,
+    /// Effect names in mosaic mode, empty otherwise.
+    names: String,
     remaining: u64,
     source: &'a str,
 }
@@ -223,11 +294,9 @@ fn hud_line(width: usize, info: &HudInfo, f: &Features) -> String {
         let n = (v.clamp(0.0, 1.0) * 5.0).round() as usize;
         format!("{}{}", "█".repeat(n), "·".repeat(5 - n))
     };
-    let text = format!(
-        " ←/→ {}/{} {:<9} │ next {:>2}s │ bass {} mid {} treb {} {} │ {} │ h hud · q quit",
-        info.index + 1,
-        info.total,
-        info.name,
+    let mut text = format!(
+        " ←/→ {:<18} │ next {:>2}s │ bass {} mid {} treb {} {} │ {} │ m mosaic · h hud · q quit",
+        info.title,
         info.remaining,
         meter(f.bass),
         meter(f.mid),
@@ -235,6 +304,10 @@ fn hud_line(width: usize, info: &HudInfo, f: &Features) -> String {
         if f.pulse > 0.5 { '●' } else { '○' },
         info.source,
     );
+    if !info.names.is_empty() {
+        text.push_str(" │ ");
+        text.push_str(&info.names);
+    }
     let mut line: String = text.chars().take(width).collect();
     let pad = width.saturating_sub(line.chars().count());
     line.extend(std::iter::repeat_n(' ', pad));

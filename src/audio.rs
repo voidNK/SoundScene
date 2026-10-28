@@ -140,14 +140,24 @@ impl AudioSource {
     }
 }
 
-pub fn list_devices() -> Result<()> {
+/// Input device names, each with a flag for the system default.
+pub fn input_devices() -> Result<Vec<(String, bool)>> {
     let host = cpal::default_host();
     let default = host.default_input_device().and_then(|d| d.name().ok());
+    Ok(host
+        .input_devices()?
+        .map(|d| {
+            let name = d.name().unwrap_or_else(|_| "unknown device".into());
+            let is_default = default.as_deref() == Some(name.as_str());
+            (name, is_default)
+        })
+        .collect())
+}
+
+pub fn list_devices() -> Result<()> {
     println!("Input devices (* = default):");
-    for d in host.input_devices()? {
-        let name = d.name().unwrap_or_else(|_| "unknown device".into());
-        let mark = if default.as_deref() == Some(name.as_str()) { '*' } else { ' ' };
-        println!("{mark} {name}");
+    for (name, is_default) in input_devices()? {
+        println!("{} {name}", if is_default { '*' } else { ' ' });
     }
     Ok(())
 }
