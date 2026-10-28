@@ -19,7 +19,7 @@ use std::time::{Duration, Instant};
 
 /// Sound-reactive demo effects in the terminal.
 /// Run without arguments for an interactive setup.
-/// Keys: ←/→ switch effect, m mosaic, h toggle HUD, q/Esc quit.
+/// Keys: ←/→ switch effect, m mosaic, c rotate colors, h toggle HUD, q/Esc quit.
 #[derive(Parser)]
 #[command(version)]
 struct Args {
@@ -162,6 +162,10 @@ fn run(args: &Args, source: &AudioSource, delay: usize) -> Result<()> {
     // so effects with trails don't smear into each other.
     let mut mosaic = args.mosaic as usize;
     let mut tiles: Vec<Canvas> = Vec::new();
+    // Hue shift in 60° steps. It is applied to a copy because effects with
+    // trails read their previous frame back from `canvas`.
+    let mut hue_step = 0u8;
+    let mut shifted = Canvas::new();
 
     let interval = Duration::from_secs(args.interval.max(1));
     let frame_time = Duration::from_secs_f64(1.0 / args.fps.clamp(5, 240) as f64);
@@ -190,6 +194,7 @@ fn run(args: &Args, source: &AudioSource, delay: usize) -> Result<()> {
                     KeyCode::Char('c') if k.modifiers.contains(KeyModifiers::CONTROL) => {
                         return Ok(());
                     }
+                    KeyCode::Char('c') => hue_step = (hue_step + 1) % 6,
                     _ => {}
                 }
             }
@@ -261,7 +266,13 @@ fn run(args: &Args, source: &AudioSource, delay: usize) -> Result<()> {
             };
             hud_line(cols as usize, &info, &analyzer.features)
         });
-        term::compose(&mut frame, &canvas, clear, hud.as_deref().map(|h| (h, draw_rows + 1)));
+        let shown = if hue_step == 0 {
+            &canvas
+        } else {
+            gfx::hue_rotate(&mut shifted, &canvas, hue_step as f32 * 60.0);
+            &shifted
+        };
+        term::compose(&mut frame, shown, clear, hud.as_deref().map(|h| (h, draw_rows + 1)));
         stdout.write_all(&frame)?;
         stdout.flush()?;
 
@@ -322,7 +333,7 @@ fn hud_line(width: usize, info: &HudInfo, f: &Features) -> String {
         format!("{}{}", "█".repeat(n), "·".repeat(5 - n))
     };
     let mut text = format!(
-        " ←/→ {:<18} │ next {:>2}s │ bass {} mid {} treb {} {} │ {} │ m mosaic · h hud · q quit",
+        " ←/→ {:<18} │ next {:>2}s │ bass {} mid {} treb {} {} │ {} │ m mosaic · c color · h hud · q quit",
         info.title,
         info.remaining,
         meter(f.bass),

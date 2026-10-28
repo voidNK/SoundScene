@@ -8,17 +8,23 @@ Old-school demoscene effects in your terminal, driven by whatever music you're p
 
 I wanted something to put on a second screen while music is running: a plasma that speeds up with the bass, a tunnel that lurches forward on every kick, a fire that gets taller when the track gets louder. It runs in any truecolor terminal, needs no GPU, and on macOS it can listen straight to a single app (like the Chrome tab playing your music) without any loopback-driver setup.
 
-![All 27 effects, page 1 of the 3×3 mosaic](docs/screenshots/mosaic-1.png)
+![Effects 28–36 in the 3×3 mosaic](docs/screenshots/mosaic-1.png)
 
 | | |
 |---|---|
-| ![Spectrum](docs/screenshots/spectrum.png) | ![Plasma](docs/screenshots/plasma.png) |
-| ![Tunnel](docs/screenshots/tunnel.png) | ![Inferno](docs/screenshots/inferno.png) |
-| ![Fire](docs/screenshots/fire.png) | ![Scope](docs/screenshots/scope.png) |
+| ![Equalizer City](docs/screenshots/equalizer-city.png) | ![Black Hole](docs/screenshots/black-hole.png) |
+| ![Raymarch](docs/screenshots/raymarch.png) | ![Lasers](docs/screenshots/lasers.png) |
+| ![Aurora](docs/screenshots/aurora.png) | ![Globe](docs/screenshots/globe.png) |
+| ![Fireworks](docs/screenshots/fireworks.png) | ![Fractal Tree](docs/screenshots/fractal-tree.png) |
 
 ## Effects
 
-There are 27 of them. In rotation order:
+There are 97 of them, in rotation order:
+
+![Effects 1–49](docs/screenshots/gallery-1.png)
+![Effects 50–97](docs/screenshots/gallery-2.png)
+
+### Originals
 
 | Effect | Reacts to |
 |---|---|
@@ -50,15 +56,120 @@ There are 27 of them. In rotation order:
 | **Lissajous** | morphing Lissajous figure; loudness sets its size |
 | **Life** | Conway's Game of Life; bass speeds up the generations, beats seed new cells |
 
+### Music and spectrum
+
+| Effect | Reacts to |
+|---|---|
+| **Sine Scroller** | rainbow pixel-font greetings on a sine wave, mirrored in water; bass raises the wave |
+| **Unknown Pleasures** | stacked spectrum snapshots receding upwards, like the Joy Division cover |
+| **Radial Spectrum** | mirrored spectrum rays around a glowing sun; the core swells on beats |
+| **VU Meter** | two analog needle meters above LED chains with peak hold |
+| **Equalizer City** | night flight down an avenue whose towers are the equalizer bands |
+| **Fireworks** | every beat launches a rocket; the burst color follows the strongest band |
+| **Chladni** | sand on a vibrating plate settles on the nodal lines; beats pick a new mode |
+| **Kefrens Bars** | Amiga Kefrens bars weaving into a twisting wall; bass widens the wobble |
+| **Lasers** | laser fans sweeping over a crowd; each beam follows a band, beats switch formation |
+| **Pendulum Wave** | pendulums with slightly different periods; balls glow with their band |
+
+### Old-school classics
+
+| Effect | Reacts to |
+|---|---|
+| **Bump Mapping** | lights gliding over an embossed relief; beats throw the light, the relief breathes with the level |
+| **Shadebobs** | glowing bobs on Lissajous paths burning banded trails; mids add bobs |
+| **Vector Balls** | shaded, depth-sorted balls morphing between cube, sphere, torus and spiral on beats |
+| **Glenz Vectors** | translucent checkered solids; bass spins them, beats push the facets out |
+| **Lens** | a glass lens drifting over a checkerboard; bass pumps its size |
+| **Rubber Cube** | a cube whose rotation lags per scanline, so it wobbles like jelly |
+| **Mode7** | SNES-style flight over a tiled floor; loudness sets the speed |
+| **Wormhole** | curving tube of twisted dot rings; beats snap the twist |
+| **Sunburst** | retro rays wheeling around a wandering sun; beats change ray count and palette |
+| **Hypno Spiral** | logarithmic spiral bands pouring into the center; bass drives the rotation |
+
+### Fractals
+
+| Effect | Reacts to |
+|---|---|
+| **Mandelbrot Zoom** | endless dive into the Mandelbrot set; bass speeds the dive, beats rotate the palette |
+| **Fractal Flame** | Electric-Sheep-style flame; each map follows its own band |
+| **Newton** | Newton fractal of zⁿ − 1; beats step the degree from 3 to 7 |
+| **Burning Ship** | slow flight over the Burning Ship fractal in a fire palette |
+| **Pythagoras Tree** | tree of squares whose branch angle follows the bass |
+| **Dragon Curve** | folding Heighway dragon; beats send bright waves along it |
+| **Chaos Game** | Sierpinski-style chaos game; beats switch between 3 and 6 corners |
+| **Fern** | Barnsley ferns bending in a wind driven by the loudness |
+| **Fractal Tree** | growing, swaying tree whose blossoms flash on beats |
+| **Lorenz** | Lorenz attractor traced in 3D with a glowing trail |
+
+### 3D and space
+
+| Effect | Reacts to |
+|---|---|
+| **Raymarch** | raymarched blobs melting into a torus above a glossy floor; the spectrum inflates them |
+| **Torus Knot** | glowing tube of dots tied into a torus knot that morphs every few beats |
+| **Tesseract** | rotating 4D hypercube; bass drives the 4D rotation |
+| **Globe** | spinning planet with continents and city lights; the atmosphere pulses on beats |
+| **Galaxy** | spiral galaxy of thousands of stars; the core glows with the bass |
+| **Black Hole** | lensed accretion disk and photon ring; loudness drives the disk |
+| **Warp** | hyperspace jump with rainbow streaks; beats kick in a surge |
+| **Ribbons** | shaded 3D ribbons twisting through space; widths follow the spectrum |
+| **Dot Wave** | perspective landscape of dots built from the spectrum history |
+| **Orbits** | small solar system around a sun that grows with the bass |
+
+### Simulations
+
+| Effect | Reacts to |
+|---|---|
+| **Reaction Diffusion** | Gray-Scott coral and maze patterns; beats seed new spots |
+| **Flow Field** | thousands of particles riding a curl-noise field; bass stirs harder |
+| **Boids** | flocking arrows; every beat scares the flock away from a point |
+| **Fluid** | stable-fluids smoke from three nozzles (bass, mids, treble) |
+| **Sand** | falling sand poured by loudness, colored by band, piling up in layers |
+| **Bouncing Balls** | glowing balls with gravity and collisions; beats kick them up |
+| **Clifford** | Clifford attractor density cloud morphing with the bass |
+| **Lightning** | branching lightning strike on every beat; treble controls branching |
+| **Caustics** | underwater light caustics; beats send ripples through the light |
+| **Spirograph** | rainbow pen drawing trochoids; gear ratios change on beats |
+
+### Nature and patterns
+
+| Effect | Reacts to |
+|---|---|
+| **Rain** | night rain over a wet street; loudness sets the density, strong beats strike lightning |
+| **Snow** | parallax snowfall over a forest; bass drives the wind, snow piles up |
+| **Aurora** | northern-lights curtains over mountains; mids drive brightness and height |
+| **Ocean** | sunset ocean; bass raises the swell, beats add foam |
+| **Clouds** | drifting dusk clouds; beats fire lightning inside them |
+| **Rose** | nested rose curves that morph to a new petal count on beats |
+| **Radar** | green phosphor radar; spectrum peaks and beats become contacts |
+| **Truchet** | Truchet tube maze; beats rotate tiles in patches |
+| **Hex Pulse** | honeycomb with one band per ring; beats send light waves outward |
+| **Fireflies** | firefly swarms over a meadow; each beat makes a swarm flash together |
+
+### Automata and retro
+
+| Effect | Reacts to |
+|---|---|
+| **Langton's Ant** | Langton's ants and turmites; loudness sets the step rate, beats add ants |
+| **Rule 30** | scrolling 1D cellular automaton; beats switch between rules |
+| **Cyclic** | cyclic cellular automaton growing rainbow spirals |
+| **Maze** | a maze carved live, flooded with color and solved |
+| **Blocks** | falling-blocks game played by a bot; beats hard-drop the piece |
+| **Pong** | self-playing bat-and-ball game; bass speeds up the ball |
+| **Test Card** | TV test card; bass wobbles it, beats cause signal glitches |
+| **Static** | analog TV snow; beats let half-tuned stations flicker through |
+| **Glitch** | RGB split, displaced blocks and tearing, bursting on every beat |
+| **Heartbeat** | ECG monitor that fires a spike on every beat, with BPM readout |
+
 Effects rotate every 60 seconds. You can also flip through them with the arrow keys.
 
 ### Mosaic mode
 
-Press `m` to see several effects at once in a 2×2 or 3×3 grid (press again to go back to a single effect), or start with `--mosaic 3`. The arrow keys and the rotation timer then move a whole page at a time. With 3×3, the 27 effects fit exactly on three pages:
+Press `m` to see several effects at once in a 2×2 or 3×3 grid (press again to go back to a single effect), or start with `--mosaic 3`. The arrow keys and the rotation timer then move a whole page at a time. With 3×3, all 97 effects fit on eleven pages. Pages 7 and 8:
 
 | | |
 |---|---|
-| ![Mosaic page 2](docs/screenshots/mosaic-2.png) | ![Mosaic page 3](docs/screenshots/mosaic-3.png) |
+| ![Mosaic page 7](docs/screenshots/mosaic-2.png) | ![Mosaic page 8](docs/screenshots/mosaic-3.png) |
 
 ## Download
 
@@ -91,7 +202,7 @@ The easiest way in is to just start it without any arguments:
 That opens a small setup screen. It lists the apps that are currently playing audio (on macOS), your input devices and the demo track. The selected source gets a live level meter, so you can see right away whether anything is coming through. Below that you can set the layout (single effect or mosaic), the delay, the rotation time and the frame rate. The bottom line shows the matching command line, so next time you can skip the setup and start straight into the effects.
 
 ```
-  SoundScene v0.2.0  ·  setup
+  SoundScene v0.3.0  ·  setup
 
   Audio source   apps show up here while they play audio · r refreshes
   ▸ ● App     Chrome       com.google.Chrome.helper  ▶ playing
@@ -172,6 +283,7 @@ Tune the value by ear until the kicks and the flashes line up.
 |---|---|
 | `←` / `→` | previous / next effect, or page in mosaic mode (also resets the rotation timer) |
 | `m` | cycle the layout: single → 2×2 → 3×3 mosaic |
+| `c` | rotate the colors (hue shift in 60° steps, six presses get back to the original) |
 | `h` | toggle the status line |
 | `q`, `Esc`, `Ctrl-C` | quit |
 

@@ -4,6 +4,14 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-28
+
+### Added
+
+- 70 new effects (97 in total), grouped in the README: music and spectrum, old-school classics, fractals, 3D and space, simulations, nature and patterns, automata and retro.
+- `c` rotates the colors of every effect (hue shift in 60° steps).
+- A test that renders every effect at all kinds of canvas sizes, including 0×0, and a speed check (`cargo test --release -- --ignored --nocapture speed`).
+
 ## [0.2.0] - 2026-10-28
 
 ### Added
@@ -25,6 +33,7 @@ First release.
 - `--meter` to print levels and detected beats without starting the UI.
 - Auto-rotation between effects (`--interval`), adjustable frame rate (`--fps`).
 
-[Unreleased]: https://github.com/voidNK/SoundScene/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/voidNK/SoundScene/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/voidNK/SoundScene/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/voidNK/SoundScene/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/voidNK/SoundScene/releases/tag/v0.1.0

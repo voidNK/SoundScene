@@ -92,6 +92,34 @@ impl Canvas {
     }
 }
 
+/// Rotates the hue of every pixel of `src` by `degrees` into `dst`, keeping
+/// luminance roughly constant (same matrix as CSS `hue-rotate()`).
+pub fn hue_rotate(dst: &mut Canvas, src: &Canvas, degrees: f32) {
+    dst.resize(src.w, src.h);
+    let (s, c) = degrees.to_radians().sin_cos();
+    let m = [
+        [
+            0.213 + c * 0.787 - s * 0.213,
+            0.715 - c * 0.715 - s * 0.715,
+            0.072 - c * 0.072 + s * 0.928,
+        ],
+        [
+            0.213 - c * 0.213 + s * 0.143,
+            0.715 + c * 0.285 + s * 0.140,
+            0.072 - c * 0.072 - s * 0.283,
+        ],
+        [
+            0.213 - c * 0.213 - s * 0.787,
+            0.715 - c * 0.715 + s * 0.715,
+            0.072 + c * 0.928 + s * 0.072,
+        ],
+    ];
+    for (d, p) in dst.px.iter_mut().zip(&src.px) {
+        let [r, g, b] = p.map(|v| v as f32);
+        *d = m.map(|row| (row[0] * r + row[1] * g + row[2] * b).clamp(0.0, 255.0) as u8);
+    }
+}
+
 pub fn rgb(r: f32, g: f32, b: f32) -> Rgb {
     [to_u8(r), to_u8(g), to_u8(b)]
 }
