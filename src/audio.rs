@@ -46,16 +46,38 @@ impl AudioSource {
     pub fn device(name: Option<&str>) -> Result<Self> {
         let host = cpal::default_host();
         let device = match name {
-            Some(n) => {
-                let needle = n.to_lowercase();
-                host.input_devices()?
-                    .find(|d| d.name().is_ok_and(|s| s.to_lowercase().contains(&needle)))
-                    .ok_or_else(|| anyhow!("no input device matching '{n}'"))?
-            }
+            Some(n) => find(host.input_devices()?, n).ok_or_else(|| anyhow!("no input device matching '{n}'"))?,
             None => host.default_input_device().context("no default input device")?,
         };
+        let config = device.default_input_config()?;
         let label = device.name().unwrap_or_else(|_| "unknown device".into());
-        let supported = device.default_input_config()?;
+        Self::open(device, config, label)
+    }
+
+    /// Records everything that plays on an output device (WASAPI loopback):
+    /// the default output, or the first one whose name contains `name`.
+    #[cfg(windows)]
+    pub fn loopback(name: Option<&str>) -> Result<Self> {
+        let host = cpal::default_host();
+        let device = match name {
+            Some(n) => find(host.output_devices()?, n).ok_or_else(|| anyhow!("no output device matching '{n}'"))?,
+            None => host.default_output_device().context("no default output device")?,
+        };
+        // cpal switches to loopback mode when an output device is opened for input.
+        let config = device.default_output_config()?;
+        let label = format!(
+            "loopback: {}",
+            device.name().unwrap_or_else(|_| "unknown device".into())
+        );
+        Self::open(device, config, label)
+    }
+
+    #[cfg(not(windows))]
+    pub fn loopback(_name: Option<&str>) -> Result<Self> {
+        bail!("--loopback is only supported on Windows (on macOS, use --tap)")
+    }
+
+    fn open(device: cpal::Device, supported: cpal::SupportedStreamConfig, label: String) -> Result<Self> {
         let format = supported.sample_format();
         let config: cpal::StreamConfig = supported.into();
         let channels = config.channels as usize;
@@ -149,24 +171,47 @@ impl AudioSource {
     }
 }
 
-/// Input device names, each with a flag for the system default.
-pub fn input_devices() -> Result<Vec<(String, bool)>> {
-    let host = cpal::default_host();
-    let default = host.default_input_device().and_then(|d| d.name().ok());
-    Ok(host
-        .input_devices()?
+/// First device whose name contains `name` (case-insensitive).
+fn find(mut devices: impl Iterator<Item = cpal::Device>, name: &str) -> Option<cpal::Device> {
+    let needle = name.to_lowercase();
+    devices.find(|d| d.name().is_ok_and(|s| s.to_lowercase().contains(&needle)))
+}
+
+/// Device names, each with a flag for the system default.
+fn names(devices: impl Iterator<Item = cpal::Device>, default: Option<cpal::Device>) -> Vec<(String, bool)> {
+    let default = default.and_then(|d| d.name().ok());
+    devices
         .map(|d| {
             let name = d.name().unwrap_or_else(|_| "unknown device".into());
             let is_default = default.as_deref() == Some(name.as_str());
             (name, is_default)
         })
-        .collect())
+        .collect()
+}
+
+pub fn input_devices() -> Result<Vec<(String, bool)>> {
+    let host = cpal::default_host();
+    Ok(names(host.input_devices()?, host.default_input_device()))
+}
+
+/// Output devices, usable with `--loopback`.
+#[cfg(windows)]
+pub fn output_devices() -> Result<Vec<(String, bool)>> {
+    let host = cpal::default_host();
+    Ok(names(host.output_devices()?, host.default_output_device()))
 }
 
 pub fn list_devices() -> Result<()> {
     println!("Input devices (* = default):");
     for (name, is_default) in input_devices()? {
         println!("{} {name}", if is_default { '*' } else { ' ' });
+    }
+    #[cfg(windows)]
+    {
+        println!("\nOutput devices for --loopback (* = default):");
+        for (name, is_default) in output_devices()? {
+            println!("{} {name}", if is_default { '*' } else { ' ' });
+        }
     }
     Ok(())
 }

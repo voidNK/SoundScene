@@ -18,6 +18,12 @@ enum Choice {
         bundle_id: String,
         playing: bool,
     },
+    // Only discovered on Windows, where WASAPI loopback exists.
+    #[cfg_attr(not(windows), allow(dead_code))]
+    Loopback {
+        name: String,
+        default: bool,
+    },
     Device {
         name: String,
         default: bool,
@@ -33,6 +39,10 @@ impl Choice {
                 short_name(bundle_id),
                 if *playing { "  ▶ playing" } else { "" }
             ),
+            Choice::Loopback { name, default } => format!(
+                "System  {name}{}  · everything playing on this output",
+                if *default { "  (default)" } else { "" }
+            ),
             Choice::Device { name, default } => {
                 format!("Input   {name}{}", if *default { "  (default)" } else { "" })
             }
@@ -43,6 +53,7 @@ impl Choice {
     fn open(&self) -> Result<AudioSource> {
         match self {
             Choice::App { bundle_id, .. } => AudioSource::tap(bundle_id),
+            Choice::Loopback { name, .. } => AudioSource::loopback(Some(name)),
             Choice::Device { name, .. } => AudioSource::device(Some(name)),
             Choice::Demo => Ok(AudioSource::demo()),
         }
@@ -52,8 +63,13 @@ impl Choice {
         args.demo = false;
         args.tap = None;
         args.device = None;
+        args.loopback = false;
         match self {
             Choice::App { bundle_id, .. } => args.tap = Some(bundle_id.clone()),
+            Choice::Loopback { name, .. } => {
+                args.loopback = true;
+                args.device = Some(name.clone());
+            }
             Choice::Device { name, .. } => args.device = Some(name.clone()),
             Choice::Demo => args.demo = true,
         }
@@ -62,6 +78,7 @@ impl Choice {
     fn same_key(&self, other: &Choice) -> bool {
         match (self, other) {
             (Choice::App { bundle_id: a, .. }, Choice::App { bundle_id: b, .. }) => a == b,
+            (Choice::Loopback { name: a, .. }, Choice::Loopback { name: b, .. }) => a == b,
             (Choice::Device { name: a, .. }, Choice::Device { name: b, .. }) => a == b,
             (Choice::Demo, Choice::Demo) => true,
             _ => false,
@@ -91,7 +108,8 @@ fn quote(s: &str) -> String {
     }
 }
 
-/// Apps that are currently playing (macOS), input devices, then the demo track.
+/// Apps that are currently playing (macOS), output devices for loopback
+/// (Windows), input devices, then the demo track.
 fn discover() -> Vec<Choice> {
     let mut list = Vec::new();
     #[cfg(target_os = "macos")]
@@ -108,6 +126,10 @@ fn discover() -> Vec<Choice> {
                 });
             }
         }
+    }
+    #[cfg(windows)]
+    for (name, default) in audio::output_devices().unwrap_or_default() {
+        list.push(Choice::Loopback { name, default });
     }
     for (name, default) in audio::input_devices().unwrap_or_default() {
         list.push(Choice::Device { name, default });
@@ -230,6 +252,7 @@ impl Setup {
         let mut cmd = String::from("soundscene");
         match self.selected.map(|i| &self.choices[i]) {
             Some(Choice::App { bundle_id, .. }) => write!(cmd, " --tap {bundle_id}").unwrap(),
+            Some(Choice::Loopback { name, .. }) => write!(cmd, " --loopback --device {}", quote(name)).unwrap(),
             Some(Choice::Device { name, .. }) => write!(cmd, " --device {}", quote(name)).unwrap(),
             Some(Choice::Demo) => cmd.push_str(" --demo"),
             None => {}
@@ -275,9 +298,14 @@ impl Setup {
             env!("CARGO_PKG_VERSION")
         ));
         line("");
-        line(&format!(
-            "  {ACCENT}Audio source{DIM}   apps show up here while they play audio · r refreshes"
-        ));
+        let hint = if cfg!(target_os = "macos") {
+            "apps show up here while they play audio · r refreshes"
+        } else if cfg!(windows) {
+            "System records everything that plays on that output, e.g. Chrome · r refreshes"
+        } else {
+            "r refreshes"
+        };
+        line(&format!("  {ACCENT}Audio source{DIM}   {hint}"));
         for (i, choice) in self.choices.iter().enumerate() {
             let (style, arrow) = marker(Row::Source(i));
             let radio = if self.selected == Some(i) { "●" } else { "○" };
@@ -357,6 +385,11 @@ pub fn run(mut args: Args) -> Result<Option<(AudioSource, Args)>> {
     let initial = choices
         .iter()
         .position(|c| matches!(c, Choice::App { playing: true, .. }))
+        .or_else(|| {
+            choices
+                .iter()
+                .position(|c| matches!(c, Choice::Loopback { default: true, .. }))
+        })
         .or_else(|| {
             choices
                 .iter()

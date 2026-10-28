@@ -68,7 +68,7 @@ Prebuilt binaries for macOS (Apple Silicon and Intel), Linux (x86_64) and Window
 - **Linux:** needs ALSA at runtime (`libasound2` on Debian/Ubuntu, `alsa-lib` on Fedora/Arch). PipeWire and PulseAudio setups provide it through their ALSA plugins.
 - **Windows:** use Windows Terminal or another terminal with truecolor support. The old console host shows garbage.
 
-`--tap` is macOS-only. On the other platforms, use an input device or a loopback device.
+`--tap` is macOS-only. On Windows, `--loopback` records everything that plays on your speakers or headphones. On Linux, use an input device or a monitor/loopback device.
 
 ## Building
 
@@ -91,7 +91,7 @@ The easiest way in is to just start it without any arguments:
 That opens a small setup screen. It lists the apps that are currently playing audio (on macOS), your input devices and the demo track. The selected source gets a live level meter, so you can see right away whether anything is coming through. Below that you can set the layout (single effect or mosaic), the delay, the rotation time and the frame rate. The bottom line shows the matching command line, so next time you can skip the setup and start straight into the effects.
 
 ```
-  SoundScene v0.1.0  ·  setup
+  SoundScene v0.2.0  ·  setup
 
   Audio source   apps show up here while they play audio · r refreshes
   ▸ ● App     Chrome       com.google.Chrome.helper  ▶ playing
@@ -134,6 +134,17 @@ This is what I use day to day. It taps the audio output of one app directly thro
 
 `--tap` matches on a part of the bundle ID, so `chrome` picks up `com.google.Chrome.helper`, the process that actually plays audio in Chrome. The first time you run it, macOS asks to allow "System Audio Recording" for your terminal app.
 
+### Listening to system audio (Windows)
+
+Windows can record everything that plays on an output device (WASAPI loopback). Chrome, Spotify, games, whatever you hear ends up in the visuals:
+
+```sh
+soundscene --loopback                         # default output device
+soundscene --loopback --device "Headphones"   # a specific output, see --list-devices
+```
+
+In the setup screen these show up as "System" entries, and the default output is preselected. Unlike `--tap` on macOS, this captures all apps playing on that device, not just one.
+
 ### Listening to an input device
 
 The default is your system's default input device, which is usually the microphone. That works surprisingly well with speakers. To pick a different device:
@@ -171,7 +182,8 @@ Tune the value by ear until the kicks and the flashes line up.
 -t, --tap <APP>            Capture an app's audio output (macOS 14.4+), matched by bundle ID
 -d, --device <DEVICE>      Input device (case-insensitive substring), e.g. "BlackHole"
     --list-apps            List apps known to the audio system and exit
-    --list-devices         List input devices and exit
+    --loopback             Record everything playing on an output device (Windows)
+    --list-devices         List input devices (and output devices on Windows) and exit
     --delay <MS>           Delay the visuals, e.g. ~200 for Bluetooth headphones (0–2000)
     --interval <SECONDS>   Seconds before auto-rotating to the next effect [default: 60]
     --fps <FPS>            Target frames per second [default: 30]

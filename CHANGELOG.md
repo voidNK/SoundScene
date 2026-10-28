@@ -4,6 +4,13 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-28
+
+### Added
+
+- Windows: record everything that plays on an output device (WASAPI loopback), so music from Chrome or any other app can drive the visuals. Use `--loopback` (optionally with `--device` to pick the output), or pick a "System" entry in the setup screen, which now preselects the default output on Windows.
+- `--list-devices` also lists output devices on Windows.
+
 ## [0.1.0] - 2026-10-28
 
 First release.
@@ -18,5 +25,6 @@ First release.
 - `--meter` to print levels and detected beats without starting the UI.
 - Auto-rotation between effects (`--interval`), adjustable frame rate (`--fps`).
 
-[Unreleased]: https://github.com/voidNK/SoundScene/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/voidNK/SoundScene/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/voidNK/SoundScene/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/voidNK/SoundScene/releases/tag/v0.1.0

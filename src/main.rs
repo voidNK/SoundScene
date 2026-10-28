@@ -27,7 +27,8 @@ struct Args {
     #[arg(long)]
     demo: bool,
 
-    /// Input device (case-insensitive substring), e.g. "BlackHole"
+    /// Input device (case-insensitive substring), e.g. "BlackHole".
+    /// With --loopback, the output device to record instead
     #[arg(short, long, conflicts_with_all = ["demo", "tap"])]
     device: Option<String>,
 
@@ -36,7 +37,12 @@ struct Args {
     #[arg(short, long, value_name = "APP", conflicts_with = "demo")]
     tap: Option<String>,
 
-    /// List input devices and exit
+    /// Record everything that plays on an output device (Windows only).
+    /// Uses the default output, or the one picked with --device
+    #[arg(long, conflicts_with_all = ["demo", "tap"])]
+    loopback: bool,
+
+    /// List input devices (and on Windows, output devices) and exit
     #[arg(long)]
     list_devices: bool,
 
@@ -90,6 +96,8 @@ fn main() -> Result<()> {
         AudioSource::demo()
     } else if let Some(app) = &args.tap {
         AudioSource::tap(app).context("could not start process tap")?
+    } else if args.loopback {
+        AudioSource::loopback(args.device.as_deref()).context("could not start loopback capture")?
     } else {
         AudioSource::device(args.device.as_deref())
             .context("could not open audio input (try --list-devices or --demo)")?
