@@ -11,6 +11,9 @@ use std::fmt::Write as _;
 use std::io::{self, Write};
 use std::time::{Duration, Instant};
 
+/// Choices for the rotation time in seconds; 0 = off.
+const INTERVALS: [u64; 13] = [0, 5, 10, 15, 20, 30, 45, 60, 90, 120, 180, 300, 600];
+
 enum Choice {
     // Only discovered on macOS, where process taps exist.
     #[cfg_attr(not(target_os = "macos"), allow(dead_code))]
@@ -212,7 +215,14 @@ impl Setup {
         match self.focused() {
             Row::Layout => self.mosaic = (self.mosaic as i64 + dir).clamp(1, 4) as u8,
             Row::Delay => self.delay = (self.delay as i64 + dir * 10).clamp(0, 2000) as u64,
-            Row::Interval => self.interval = (self.interval as i64 + dir * 10).clamp(10, 600) as u64,
+            Row::Interval => {
+                // Snap to the nearest step first, the value may come from --interval.
+                let i = INTERVALS
+                    .iter()
+                    .position(|&s| s >= self.interval)
+                    .unwrap_or(INTERVALS.len() - 1);
+                self.interval = INTERVALS[(i as i64 + dir).clamp(0, INTERVALS.len() as i64 - 1) as usize];
+            }
             Row::Fps => self.fps = (self.fps as i64 + dir * 5).clamp(10, 60) as u32,
             _ => {}
         }
@@ -263,7 +273,7 @@ impl Setup {
         if self.delay != 0 {
             write!(cmd, " --delay {}", self.delay).unwrap();
         }
-        if self.interval != 60 {
+        if self.interval != 10 {
             write!(cmd, " --interval {}", self.interval).unwrap();
         }
         if self.fps != 30 {
@@ -356,8 +366,11 @@ impl Setup {
         line(&setting(
             Row::Interval,
             "Rotate",
-            format!("{} s", self.interval),
-            "time per effect",
+            match self.interval {
+                0 => "off".to_string(),
+                secs => format!("{secs} s"),
+            },
+            "time per effect, off = only ←/→ switch",
         ));
         line(&setting(
             Row::Fps,
@@ -371,6 +384,9 @@ impl Setup {
         line("");
         line(&format!(
             "  {DIM}↑/↓ move · ←/→ change · Enter select / start · Space try source · r refresh · q quit"
+        ));
+        line(&format!(
+            "  {DIM}while running: ←/→ effect · m mosaic · c colors · f fullscreen · h status line · q quit"
         ));
         line(&format!("  {DIM}skip this next time:  \x1b[39m{}", self.command_line()));
         out.push_str("\x1b[J\x1b[?2026l");

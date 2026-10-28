@@ -161,11 +161,11 @@ There are 97 of them, in rotation order:
 | **Glitch** | RGB split, displaced blocks and tearing, bursting on every beat |
 | **Heartbeat** | ECG monitor that fires a spike on every beat, with BPM readout |
 
-Effects rotate every 60 seconds. You can also flip through them with the arrow keys.
+Effects rotate every 10 seconds (`--interval`, or `0` to turn it off). You can also flip through them with the arrow keys.
 
 ### Mosaic mode
 
-Press `m` to see several effects at once in a 2×2 or 3×3 grid (press again to go back to a single effect), or start with `--mosaic 3`. The arrow keys and the rotation timer then move a whole page at a time. With 3×3, all 97 effects fit on eleven pages. Pages 7 and 8:
+Press `m` to see several effects at once in a 2×2, 3×3 or 4×4 grid (press again to go back to a single effect), or start with `--mosaic 3`. The arrow keys and the rotation timer then move a whole page at a time. With 3×3, all 97 effects fit on eleven pages, with 4×4 on seven. Pages 7 and 8:
 
 | | |
 |---|---|
@@ -202,7 +202,7 @@ The easiest way in is to just start it without any arguments:
 That opens a small setup screen. It lists the apps that are currently playing audio (on macOS), your input devices and the demo track. The selected source gets a live level meter, so you can see right away whether anything is coming through. Below that you can set the layout (single effect or mosaic), the delay, the rotation time and the frame rate. The bottom line shows the matching command line, so next time you can skip the setup and start straight into the effects.
 
 ```
-  SoundScene v0.3.0  ·  setup
+  SoundScene v0.4.0  ·  setup
 
   Audio source   apps show up here while they play audio · r refreshes
   ▸ ● App     Chrome       com.google.Chrome.helper  ▶ playing
@@ -215,11 +215,13 @@ That opens a small setup screen. It lists the apps that are currently playing au
   Settings
     Layout    ◂  single ▸   several effects at once; m switches while running
     Delay     ◂  200 ms ▸   hold visuals back, ~200 ms for Bluetooth headphones
-    Rotate    ◂    60 s ▸   time per effect
+    Rotate    ◂    10 s ▸   time per effect, off = only ←/→ switch
     FPS       ◂      30 ▸   lower it if the terminal can't keep up
 
     [ Start ]
 
+  ↑/↓ move · ←/→ change · Enter select / start · Space try source · r refresh · q quit
+  while running: ←/→ effect · m mosaic · c colors · f fullscreen · h status line · q quit
   skip this next time:  soundscene --tap com.google.Chrome.helper --delay 200
 ```
 
@@ -282,8 +284,9 @@ Tune the value by ear until the kicks and the flashes line up.
 | Key | Action |
 |---|---|
 | `←` / `→` | previous / next effect, or page in mosaic mode (also resets the rotation timer) |
-| `m` | cycle the layout: single → 2×2 → 3×3 mosaic |
+| `m` | cycle the layout: single → 2×2 → 3×3 → 4×4 mosaic |
 | `c` | rotate the colors (hue shift in 60° steps, six presses get back to the original) |
+| `f` | fullscreen: hides the status line and asks the terminal to go fullscreen (xterm window op, e.g. xterm and others that support it; elsewhere use the terminal's own shortcut, like `⌘↩` in iTerm2, `⌃⌘F` in Terminal.app or `F11` in Windows Terminal). Press again to go back |
 | `h` | toggle the status line |
 | `q`, `Esc`, `Ctrl-C` | quit |
 
@@ -297,7 +300,7 @@ Tune the value by ear until the kicks and the flashes line up.
     --loopback             Record everything playing on an output device (Windows)
     --list-devices         List input devices (and output devices on Windows) and exit
     --delay <MS>           Delay the visuals, e.g. ~200 for Bluetooth headphones (0–2000)
-    --interval <SECONDS>   Seconds before auto-rotating to the next effect [default: 60]
+    --interval <SECONDS>   Seconds before auto-rotating to the next effect, 0 turns auto-rotation off [default: 10]
     --fps <FPS>            Target frames per second [default: 30]
     --mosaic <N>           Show several effects at once in an N×N grid, 1–4 [default: 1]
     --meter <SECONDS>      Print audio levels and beats instead of starting the UI

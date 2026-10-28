@@ -4,6 +4,19 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-28
+
+### Added
+
+- `f` toggles fullscreen: hides the status line and asks the terminal to go fullscreen where supported.
+- Auto-rotation can be turned off: `--interval 0`, or "off" in the setup screen. The status line then shows "rotate off".
+- `m` also cycles through the 4×4 mosaic.
+- The setup screen lists the keys that work while the effects run.
+
+### Changed
+
+- Effects rotate every 10 seconds by default instead of 60.
+
 ## [0.3.0] - 2026-10-28
 
 ### Added
@@ -33,7 +46,8 @@ First release.
 - `--meter` to print levels and detected beats without starting the UI.
 - Auto-rotation between effects (`--interval`), adjustable frame rate (`--fps`).
 
-[Unreleased]: https://github.com/voidNK/SoundScene/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/voidNK/SoundScene/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/voidNK/SoundScene/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/voidNK/SoundScene/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/voidNK/SoundScene/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/voidNK/SoundScene/releases/tag/v0.1.0

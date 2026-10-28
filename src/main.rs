@@ -15,11 +15,12 @@ use crossterm::event::{self, Event, KeyCode, KeyEventKind, KeyModifiers};
 use crossterm::{cursor, execute, terminal};
 use gfx::Canvas;
 use std::io::{self, Write};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 
 /// Sound-reactive demo effects in the terminal.
 /// Run without arguments for an interactive setup.
-/// Keys: ←/→ switch effect, m mosaic, c rotate colors, h toggle HUD, q/Esc quit.
+/// Keys: ←/→ switch effect, m mosaic, c rotate colors, f fullscreen, h toggle HUD, q/Esc quit.
 #[derive(Parser)]
 #[command(version)]
 struct Args {
@@ -55,8 +56,8 @@ struct Args {
     #[arg(long, value_name = "MS", default_value_t = 0, value_parser = clap::value_parser!(u64).range(0..=2000))]
     delay: u64,
 
-    /// Seconds before auto-rotating to the next effect
-    #[arg(long, value_name = "SECONDS", default_value_t = 60)]
+    /// Seconds before auto-rotating to the next effect, 0 turns auto-rotation off
+    #[arg(long, value_name = "SECONDS", default_value_t = 10)]
     interval: u64,
 
     /// Target frames per second
@@ -167,7 +168,8 @@ fn run(args: &Args, source: &AudioSource, delay: usize) -> Result<()> {
     let mut hue_step = 0u8;
     let mut shifted = Canvas::new();
 
-    let interval = Duration::from_secs(args.interval.max(1));
+    // None = auto-rotation off.
+    let interval = (args.interval > 0).then(|| Duration::from_secs(args.interval));
     let frame_time = Duration::from_secs_f64(1.0 / args.fps.clamp(5, 240) as f64);
     let start = Instant::now();
     let mut last = start;
@@ -185,8 +187,13 @@ fn run(args: &Args, source: &AudioSource, delay: usize) -> Result<()> {
                     KeyCode::Right => step += 1,
                     KeyCode::Left => step -= 1,
                     KeyCode::Char('h') => show_hud = !show_hud,
+                    KeyCode::Char('f') => {
+                        let on = !FULLSCREEN.load(Ordering::Relaxed);
+                        set_fullscreen(on);
+                        show_hud = !on;
+                    }
                     KeyCode::Char('m') => {
-                        mosaic = if mosaic >= 3 { 1 } else { mosaic + 1 };
+                        mosaic = if mosaic >= 4 { 1 } else { mosaic + 1 };
                         tiles.clear();
                         canvas.clear();
                     }
@@ -201,7 +208,7 @@ fn run(args: &Args, source: &AudioSource, delay: usize) -> Result<()> {
         }
 
         let now = Instant::now();
-        if step == 0 && now.duration_since(switched) >= interval {
+        if step == 0 && interval.is_some_and(|i| now.duration_since(switched) >= i) {
             step = 1;
         }
         let page = mosaic * mosaic;
@@ -261,7 +268,7 @@ fn run(args: &Args, source: &AudioSource, delay: usize) -> Result<()> {
             let info = HudInfo {
                 title,
                 names,
-                remaining: interval.saturating_sub(now.duration_since(switched)).as_secs(),
+                remaining: interval.map(|i| i.saturating_sub(now.duration_since(switched)).as_secs()),
                 source: &source.label,
             };
             hud_line(cols as usize, &info, &analyzer.features)
@@ -323,7 +330,8 @@ struct HudInfo<'a> {
     title: String,
     /// Effect names in mosaic mode, empty otherwise.
     names: String,
-    remaining: u64,
+    /// Seconds until the next auto-rotation, None if it is off.
+    remaining: Option<u64>,
     source: &'a str,
 }
 
@@ -332,10 +340,13 @@ fn hud_line(width: usize, info: &HudInfo, f: &Features) -> String {
         let n = (v.clamp(0.0, 1.0) * 5.0).round() as usize;
         format!("{}{}", "█".repeat(n), "·".repeat(5 - n))
     };
+    let next = match info.remaining {
+        Some(secs) => format!("next {secs:>2}s"),
+        None => "rotate off".to_string(),
+    };
     let mut text = format!(
-        " ←/→ {:<18} │ next {:>2}s │ bass {} mid {} treb {} {} │ {} │ m mosaic · c color · h hud · q quit",
+        " ←/→ {:<18} │ {next} │ bass {} mid {} treb {} {} │ {} │ m mosaic · c color · f full · h hud · q quit",
         info.title,
-        info.remaining,
         meter(f.bass),
         meter(f.mid),
         meter(f.treble),
@@ -382,7 +393,23 @@ impl Drop for TerminalGuard {
     }
 }
 
+/// Set while this app has asked the terminal for fullscreen, so it can be
+/// undone on exit.
+static FULLSCREEN: AtomicBool = AtomicBool::new(false);
+
+/// Asks the terminal to enter or leave fullscreen (xterm window op 10).
+/// Terminals that don't support it ignore the sequence.
+fn set_fullscreen(on: bool) {
+    FULLSCREEN.store(on, Ordering::Relaxed);
+    let mut out = io::stdout();
+    let _ = write!(out, "\x1b[10;{}t", on as u8);
+    let _ = out.flush();
+}
+
 fn restore_terminal() {
+    if FULLSCREEN.load(Ordering::Relaxed) {
+        set_fullscreen(false);
+    }
     let _ = execute!(
         io::stdout(),
         terminal::EnableLineWrap,
