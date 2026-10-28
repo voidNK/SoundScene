@@ -24,7 +24,12 @@ pub struct Particles {
 
 impl Particles {
     pub fn new() -> Self {
-        Self { particles: Vec::new(), rng: Rng::new(0xB00), hue: 0.0, emit: 0.0 }
+        Self {
+            particles: Vec::new(),
+            rng: Rng::new(0xB00),
+            hue: 0.0,
+            emit: 0.0,
+        }
     }
 }
 

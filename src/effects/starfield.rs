@@ -20,7 +20,11 @@ impl Starfield {
     pub fn new() -> Self {
         let mut rng = Rng::new(0xC0FFEE);
         let stars = (0..STARS)
-            .map(|_| Star { x: rng.range(-1.0, 1.0), y: rng.range(-1.0, 1.0), z: rng.range(0.05, 1.0) })
+            .map(|_| Star {
+                x: rng.range(-1.0, 1.0),
+                y: rng.range(-1.0, 1.0),
+                z: rng.range(0.05, 1.0),
+            })
             .collect();
         Self { stars, rng }
     }

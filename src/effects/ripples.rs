@@ -15,7 +15,14 @@ pub struct Ripples {
 
 impl Ripples {
     pub fn new() -> Self {
-        Self { cur: Vec::new(), prev: Vec::new(), w: 0, h: 0, rng: Rng::new(0x5EA), hue: 0.0 }
+        Self {
+            cur: Vec::new(),
+            prev: Vec::new(),
+            w: 0,
+            h: 0,
+            rng: Rng::new(0x5EA),
+            hue: 0.0,
+        }
     }
 
     fn drop(&mut self, strength: f32) {
@@ -67,7 +74,11 @@ impl Effect for Ripples {
         for y in 0..h {
             for x in 0..w {
                 let i = y * w + x;
-                let slope = if x > 0 && x < w - 1 { self.cur[i + 1] - self.cur[i - 1] } else { 0.0 };
+                let slope = if x > 0 && x < w - 1 {
+                    self.cur[i + 1] - self.cur[i - 1]
+                } else {
+                    0.0
+                };
                 let val = (0.25 + slope * 0.35 + self.cur[i] * 0.1).clamp(0.02, 1.0);
                 c.set(x, y, hsv(0.55 + self.hue, 0.7 - slope.abs().min(0.5), val));
             }

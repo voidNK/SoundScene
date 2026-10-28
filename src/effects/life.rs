@@ -16,7 +16,15 @@ pub struct Life {
 
 impl Life {
     pub fn new() -> Self {
-        Self { cells: Vec::new(), next: Vec::new(), w: 0, h: 0, rng: Rng::new(0x11FE), acc: 0.0, hue: 0.3 }
+        Self {
+            cells: Vec::new(),
+            next: Vec::new(),
+            w: 0,
+            h: 0,
+            rng: Rng::new(0x11FE),
+            acc: 0.0,
+            hue: 0.3,
+        }
     }
 
     /// Randomly sets cells alive in a rectangle.

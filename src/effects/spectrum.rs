@@ -9,7 +9,9 @@ pub struct Spectrum {
 
 impl Spectrum {
     pub fn new() -> Self {
-        Self { peaks: vec![0.0; SPECTRUM_BINS] }
+        Self {
+            peaks: vec![0.0; SPECTRUM_BINS],
+        }
     }
 }
 
@@ -39,7 +41,11 @@ impl Effect for Spectrum {
             let height = ((f.spectrum[bin] * hf) as usize).min(c.h);
             for i in 0..height {
                 let frac = i as f32 / hf;
-                c.set(x, c.h - 1 - i, hsv(0.62 - frac * 0.62 + t * 0.03, 0.85, 0.35 + 0.65 * frac));
+                c.set(
+                    x,
+                    c.h - 1 - i,
+                    hsv(0.62 - frac * 0.62 + t * 0.03, 0.85, 0.35 + 0.65 * frac),
+                );
             }
             let peak_y = ((1.0 - self.peaks[bin]) * (hf - 1.0)) as usize;
             c.set(x, peak_y.min(c.h - 1), [240, 240, 255]);

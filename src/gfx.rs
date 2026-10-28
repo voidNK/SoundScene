@@ -12,7 +12,11 @@ pub struct Canvas {
 
 impl Canvas {
     pub fn new() -> Self {
-        Self { w: 0, h: 0, px: Vec::new() }
+        Self {
+            w: 0,
+            h: 0,
+            px: Vec::new(),
+        }
     }
 
     /// Returns true if the size changed (pixels are cleared in that case).

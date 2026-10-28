@@ -49,7 +49,11 @@ impl Effect for DotSphere {
             let p = 3.0 / (z + 3.0);
             let brightness = ((1.0 - z) * 0.5).clamp(0.15, 1.0);
             let col = hsv(self.hue + (y + 1.0) * 0.2, 0.6, brightness);
-            c.plot_add((cx + x * radius * p).round() as i32, (cy + y * radius * p).round() as i32, col);
+            c.plot_add(
+                (cx + x * radius * p).round() as i32,
+                (cy + y * radius * p).round() as i32,
+                col,
+            );
         }
     }
 }

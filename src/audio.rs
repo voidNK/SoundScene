@@ -35,11 +35,7 @@ pub(crate) fn push(buf: &Shared, samples: impl Iterator<Item = f32>) {
     b.drain(..excess);
 }
 
-pub(crate) fn mono<T: Copy>(
-    data: &[T],
-    channels: usize,
-    conv: impl Fn(T) -> f32,
-) -> impl Iterator<Item = f32> {
+pub(crate) fn mono<T: Copy>(data: &[T], channels: usize, conv: impl Fn(T) -> f32) -> impl Iterator<Item = f32> {
     data.chunks(channels)
         .map(move |frame| frame.iter().map(|&s| conv(s)).sum::<f32>() / channels as f32)
 }
@@ -77,9 +73,7 @@ impl AudioSource {
             )?,
             cpal::SampleFormat::I16 => device.build_input_stream(
                 &config,
-                move |d: &[i16], _: &cpal::InputCallbackInfo| {
-                    push(&b, mono(d, channels, |s| s as f32 / 32768.0))
-                },
+                move |d: &[i16], _: &cpal::InputCallbackInfo| push(&b, mono(d, channels, |s| s as f32 / 32768.0)),
                 err,
                 None,
             )?,
@@ -95,7 +89,12 @@ impl AudioSource {
         };
         stream.play()?;
 
-        Ok(Self { buf, sample_rate: config.sample_rate.0, label, _keep: Box::new(stream) })
+        Ok(Self {
+            buf,
+            sample_rate: config.sample_rate.0,
+            label,
+            _keep: Box::new(stream),
+        })
     }
 
     /// Synthetic 124 BPM track generated in real time on a background thread.
@@ -114,7 +113,12 @@ impl AudioSource {
                 thread::sleep(Duration::from_millis(5));
             }
         });
-        Self { buf, sample_rate, label: "demo synth".into(), _keep: Box::new(()) }
+        Self {
+            buf,
+            sample_rate,
+            label: "demo synth".into(),
+            _keep: Box::new(()),
+        }
     }
 
     /// Captures the output of apps whose bundle ID contains `app` (macOS only).
@@ -122,7 +126,12 @@ impl AudioSource {
     pub fn tap(app: &str) -> Result<Self> {
         let buf = shared();
         let tap = crate::tap::ProcessTap::start(app, buf.clone())?;
-        Ok(Self { buf, sample_rate: tap.sample_rate, label: tap.label.clone(), _keep: Box::new(tap) })
+        Ok(Self {
+            buf,
+            sample_rate: tap.sample_rate,
+            label: tap.label.clone(),
+            _keep: Box::new(tap),
+        })
     }
 
     #[cfg(not(target_os = "macos"))]
@@ -205,13 +214,21 @@ impl DemoSynth {
         let kick = (self.kick_phase * TAU).sin() * (-since_beat * 7.0).exp() * 0.9;
 
         let noise = self.rng.range(-1.0, 1.0);
-        let snare = if beat % 2 == 1 { noise * (-since_beat * 18.0).exp() * 0.35 } else { 0.0 };
+        let snare = if beat % 2 == 1 {
+            noise * (-since_beat * 18.0).exp() * 0.35
+        } else {
+            0.0
+        };
         let hat = (noise - self.last_noise) * 0.5 * (-since_8th * 60.0).exp() * 0.25;
         self.last_noise = noise;
 
         let root = [55.0, 55.0, 73.42, 65.41][(bar % 4) as usize];
         self.bass_phase = (self.bass_phase + root / self.sr).fract();
-        let pump = if drums { 1.0 - 0.8 * (-since_beat * 8.0).exp() } else { 1.0 };
+        let pump = if drums {
+            1.0 - 0.8 * (-since_beat * 8.0).exp()
+        } else {
+            1.0
+        };
         let bass = (self.bass_phase * 2.0 - 1.0) * 0.18 * pump;
 
         let notes = [440.0, 523.25, 659.25, 783.99];

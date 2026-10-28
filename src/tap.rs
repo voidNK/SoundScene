@@ -109,7 +109,11 @@ const fn fourcc(s: &[u8; 4]) -> u32 {
 }
 
 fn address(selector: &[u8; 4]) -> PropertyAddress {
-    PropertyAddress { selector: fourcc(selector), scope: fourcc(b"glob"), element: 0 }
+    PropertyAddress {
+        selector: fourcc(selector),
+        scope: fourcc(b"glob"),
+        element: 0,
+    }
 }
 
 fn check(status: OSStatus, what: &str) -> Result<()> {
@@ -130,9 +134,19 @@ fn get<T: Copy>(id: AudioObjectID, selector: &[u8; 4]) -> Result<T> {
     let mut value = MaybeUninit::<T>::zeroed();
     let mut size = size_of::<T>() as u32;
     let status = unsafe {
-        AudioObjectGetPropertyData(id, &address(selector), 0, ptr::null(), &mut size, value.as_mut_ptr().cast())
+        AudioObjectGetPropertyData(
+            id,
+            &address(selector),
+            0,
+            ptr::null(),
+            &mut size,
+            value.as_mut_ptr().cast(),
+        )
     };
-    check(status, &format!("reading property {}", String::from_utf8_lossy(selector)))?;
+    check(
+        status,
+        &format!("reading property {}", String::from_utf8_lossy(selector)),
+    )?;
     Ok(unsafe { value.assume_init() })
 }
 
@@ -228,7 +242,10 @@ extern "C" fn io_proc(
             let chans: Vec<&[f32]> = many.iter().map(samples).collect();
             let frames = chans.iter().map(|c| c.len()).min().unwrap_or(0);
             let n = chans.len() as f32;
-            push(&cb.buf, (0..frames).map(|i| chans.iter().map(|c| c[i]).sum::<f32>() / n));
+            push(
+                &cb.buf,
+                (0..frames).map(|i| chans.iter().map(|c| c[i]).sum::<f32>() / n),
+            );
         }
     }
     0
@@ -305,7 +322,10 @@ impl ProcessTap {
         let sub_device = CFDictionary::from_CFType_pairs(&[(key("uid"), CFString::new(&output_uid).as_CFType())]);
         let aggregate = CFDictionary::from_CFType_pairs(&[
             (key("name"), CFString::new("soundscene tap").as_CFType()),
-            (key("uid"), CFString::new(&format!("soundscene-{}", std::process::id())).as_CFType()),
+            (
+                key("uid"),
+                CFString::new(&format!("soundscene-{}", std::process::id())).as_CFType(),
+            ),
             (key("master"), CFString::new(&output_uid).as_CFType()),
             (key("private"), CFBoolean::true_value().as_CFType()),
             (key("stacked"), CFBoolean::false_value().as_CFType()),
@@ -320,7 +340,11 @@ impl ProcessTap {
 
         let format: StreamDescription = get(this.tap, b"tfmt")?;
         if format.format_flags & FORMAT_FLAG_FLOAT == 0 || format.bits_per_channel != 32 {
-            bail!("unexpected tap format: flags {:#x}, {} bits", format.format_flags, format.bits_per_channel);
+            bail!(
+                "unexpected tap format: flags {:#x}, {} bits",
+                format.format_flags,
+                format.bits_per_channel
+            );
         }
         let rate: f64 = get(this.device, b"nsrt").unwrap_or(format.sample_rate);
         this.sample_rate = rate.round() as u32;
@@ -330,7 +354,10 @@ impl ProcessTap {
             unsafe { AudioDeviceCreateIOProcID(this.device, io_proc, this.callback.cast(), &mut this.proc_id) },
             "creating IOProc",
         )?;
-        check(unsafe { AudioDeviceStart(this.device, this.proc_id) }, "starting tap device")?;
+        check(
+            unsafe { AudioDeviceStart(this.device, this.proc_id) },
+            "starting tap device",
+        )?;
         Ok(this)
     }
 }

@@ -12,8 +12,16 @@ use std::io::{self, Write};
 use std::time::{Duration, Instant};
 
 enum Choice {
-    App { bundle_id: String, playing: bool },
-    Device { name: String, default: bool },
+    // Only discovered on macOS, where process taps exist.
+    #[cfg_attr(not(target_os = "macos"), allow(dead_code))]
+    App {
+        bundle_id: String,
+        playing: bool,
+    },
+    Device {
+        name: String,
+        default: bool,
+    },
     Demo,
 }
 
@@ -76,7 +84,11 @@ fn short_name(bundle_id: &str) -> &str {
 }
 
 fn quote(s: &str) -> String {
-    if s.contains(' ') { format!("\"{s}\"") } else { s.to_string() }
+    if s.contains(' ') {
+        format!("\"{s}\"")
+    } else {
+        s.to_string()
+    }
 }
 
 /// Apps that are currently playing (macOS), input devices, then the demo track.
@@ -86,9 +98,14 @@ fn discover() -> Vec<Choice> {
     if let Ok(procs) = crate::tap::processes() {
         let own = std::process::id() as i32;
         for p in procs {
-            let dup = list.iter().any(|c| matches!(c, Choice::App { bundle_id, .. } if *bundle_id == p.bundle_id));
+            let dup = list
+                .iter()
+                .any(|c| matches!(c, Choice::App { bundle_id, .. } if *bundle_id == p.bundle_id));
             if p.playing && !p.bundle_id.is_empty() && p.pid != own && !dup {
-                list.push(Choice::App { bundle_id: p.bundle_id, playing: true });
+                list.push(Choice::App {
+                    bundle_id: p.bundle_id,
+                    playing: true,
+                });
             }
         }
     }
@@ -157,7 +174,9 @@ impl Setup {
     /// Re-scans sources, keeping the current selection if it still exists.
     fn refresh(&mut self) {
         let fresh = discover();
-        let selected = self.selected.and_then(|i| fresh.iter().position(|c| c.same_key(&self.choices[i])));
+        let selected = self
+            .selected
+            .and_then(|i| fresh.iter().position(|c| c.same_key(&self.choices[i])));
         self.choices = fresh;
         self.selected = selected;
         if selected.is_none() {
@@ -242,12 +261,23 @@ impl Setup {
             out.push_str(s);
             out.push_str("\x1b[0m\x1b[K\r\n");
         };
-        let marker = |row: Row| if self.focused() == row { (FOCUS, "▸") } else { ("", " ") };
+        let marker = |row: Row| {
+            if self.focused() == row {
+                (FOCUS, "▸")
+            } else {
+                ("", " ")
+            }
+        };
 
         line("");
-        line(&format!("  \x1b[1mSoundScene\x1b[0m  {DIM}setup"));
+        line(&format!(
+            "  \x1b[1mSoundScene\x1b[0m {DIM}v{}  ·  setup",
+            env!("CARGO_PKG_VERSION")
+        ));
         line("");
-        line(&format!("  {ACCENT}Audio source{DIM}   apps show up here while they play audio · r refreshes"));
+        line(&format!(
+            "  {ACCENT}Audio source{DIM}   apps show up here while they play audio · r refreshes"
+        ));
         for (i, choice) in self.choices.iter().enumerate() {
             let (style, arrow) = marker(Row::Source(i));
             let radio = if self.selected == Some(i) { "●" } else { "○" };
@@ -278,16 +308,42 @@ impl Setup {
             let (style, arrow) = marker(row);
             format!("  {style}{arrow} {name:<9} ◂ {value:>7} ▸ \x1b[0m  {DIM}{hint}")
         };
-        let layout = if self.mosaic == 1 { "single".to_string() } else { format!("{0}×{0}", self.mosaic) };
-        line(&setting(Row::Layout, "Layout", layout, "several effects at once; m switches while running"));
-        line(&setting(Row::Delay, "Delay", format!("{} ms", self.delay), "hold visuals back, ~200 ms for Bluetooth headphones"));
-        line(&setting(Row::Interval, "Rotate", format!("{} s", self.interval), "time per effect"));
-        line(&setting(Row::Fps, "FPS", self.fps.to_string(), "lower it if the terminal can't keep up"));
+        let layout = if self.mosaic == 1 {
+            "single".to_string()
+        } else {
+            format!("{0}×{0}", self.mosaic)
+        };
+        line(&setting(
+            Row::Layout,
+            "Layout",
+            layout,
+            "several effects at once; m switches while running",
+        ));
+        line(&setting(
+            Row::Delay,
+            "Delay",
+            format!("{} ms", self.delay),
+            "hold visuals back, ~200 ms for Bluetooth headphones",
+        ));
+        line(&setting(
+            Row::Interval,
+            "Rotate",
+            format!("{} s", self.interval),
+            "time per effect",
+        ));
+        line(&setting(
+            Row::Fps,
+            "FPS",
+            self.fps.to_string(),
+            "lower it if the terminal can't keep up",
+        ));
         line("");
         let (style, arrow) = marker(Row::Start);
         line(&format!("  {style}{arrow} [ Start ] "));
         line("");
-        line(&format!("  {DIM}↑/↓ move · ←/→ change · Enter select / start · Space try source · r refresh · q quit"));
+        line(&format!(
+            "  {DIM}↑/↓ move · ←/→ change · Enter select / start · Space try source · r refresh · q quit"
+        ));
         line(&format!("  {DIM}skip this next time:  \x1b[39m{}", self.command_line()));
         out.push_str("\x1b[J\x1b[?2026l");
     }
@@ -301,7 +357,11 @@ pub fn run(mut args: Args) -> Result<Option<(AudioSource, Args)>> {
     let initial = choices
         .iter()
         .position(|c| matches!(c, Choice::App { playing: true, .. }))
-        .or_else(|| choices.iter().position(|c| matches!(c, Choice::Device { default: true, .. })))
+        .or_else(|| {
+            choices
+                .iter()
+                .position(|c| matches!(c, Choice::Device { default: true, .. }))
+        })
         .unwrap_or(choices.len() - 1);
     let mut setup = Setup {
         choices,

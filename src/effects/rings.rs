@@ -54,7 +54,7 @@ impl Effect for Rings {
                     if pos.fract() > 0.75 {
                         [0, 0, 0]
                     } else {
-                        let dir = if i % 2 == 0 { 1.0 } else { -1.0 };
+                        let dir = if i.is_multiple_of(2) { 1.0 } else { -1.0 };
                         let a = ((dy.atan2(dx) + self.rot * dir * (1.0 + i as f32 * 0.1)) / TAU).rem_euclid(1.0);
                         if a < levels[i] {
                             hsv(ring_hue, 0.8, 0.5 + 0.5 * levels[i])

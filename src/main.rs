@@ -115,7 +115,11 @@ fn meter(source: &AudioSource, secs: u64, delay: usize) -> Result<()> {
         std::thread::sleep(Duration::from_millis(20));
         let now = Instant::now();
         source.snapshot(FFT_SIZE, delay, &mut samples);
-        analyzer.update(&samples, now.duration_since(start).as_secs_f32(), now.duration_since(last).as_secs_f32());
+        analyzer.update(
+            &samples,
+            now.duration_since(start).as_secs_f32(),
+            now.duration_since(last).as_secs_f32(),
+        );
         last = now;
         let f = &analyzer.features;
         if f.beat || now >= next_print {
@@ -214,17 +218,32 @@ fn run(args: &Args, source: &AudioSource, delay: usize) -> Result<()> {
         if mosaic == 1 {
             effects[current].render(&mut canvas, t, dt, &analyzer.features);
         } else {
-            render_mosaic(&mut canvas, &mut tiles, mosaic, &mut effects, current, t, dt, &analyzer.features);
+            render_mosaic(
+                &mut canvas,
+                &mut tiles,
+                mosaic,
+                &mut effects,
+                current,
+                t,
+                dt,
+                &analyzer.features,
+            );
         }
 
         let hud = show_hud.then(|| {
             let total = effects.len();
             let (title, names) = if mosaic == 1 {
-                (format!("{}/{} {}", current + 1, total, effects[current].name()), String::new())
+                (
+                    format!("{}/{} {}", current + 1, total, effects[current].name()),
+                    String::new(),
+                )
             } else {
                 let names: Vec<&str> = (0..page).map(|i| effects[(current + i) % total].name()).collect();
                 let last = (current + page - 1) % total + 1;
-                (format!("{}–{last}/{total} {mosaic}×{mosaic}", current + 1), names.join(" · "))
+                (
+                    format!("{}–{last}/{total} {mosaic}×{mosaic}", current + 1),
+                    names.join(" · "),
+                )
             };
             let info = HudInfo {
                 title,
@@ -323,7 +342,12 @@ impl TerminalGuard {
         terminal::enable_raw_mode()?;
         // Autowrap off: overlong lines during a resize get clipped instead of
         // wrapping and scrolling the screen.
-        execute!(io::stdout(), terminal::EnterAlternateScreen, cursor::Hide, terminal::DisableLineWrap)?;
+        execute!(
+            io::stdout(),
+            terminal::EnterAlternateScreen,
+            cursor::Hide,
+            terminal::DisableLineWrap
+        )?;
         let default_hook = std::panic::take_hook();
         std::panic::set_hook(Box::new(move |info| {
             restore_terminal();
@@ -340,6 +364,11 @@ impl Drop for TerminalGuard {
 }
 
 fn restore_terminal() {
-    let _ = execute!(io::stdout(), terminal::EnableLineWrap, cursor::Show, terminal::LeaveAlternateScreen);
+    let _ = execute!(
+        io::stdout(),
+        terminal::EnableLineWrap,
+        cursor::Show,
+        terminal::LeaveAlternateScreen
+    );
     let _ = terminal::disable_raw_mode();
 }

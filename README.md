@@ -1,5 +1,9 @@
 # SoundScene
 
+[![CI](https://github.com/voidNK/SoundScene/actions/workflows/ci.yml/badge.svg)](https://github.com/voidNK/SoundScene/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/voidNK/SoundScene)](https://github.com/voidNK/SoundScene/releases/latest)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 Old-school demoscene effects in your terminal, driven by whatever music you're playing.
 
 I wanted something to put on a second screen while music is running: a plasma that speeds up with the bass, a tunnel that lurches forward on every kick, a fire that gets taller when the track gets louder. It runs in any truecolor terminal, needs no GPU, and on macOS it can listen straight to a single app (like the Chrome tab playing your music) without any loopback-driver setup.
@@ -56,9 +60,19 @@ Press `m` to see several effects at once in a 2×2 or 3×3 grid (press again to 
 |---|---|
 | ![Mosaic page 2](docs/screenshots/mosaic-2.png) | ![Mosaic page 3](docs/screenshots/mosaic-3.png) |
 
+## Download
+
+Prebuilt binaries for macOS (Apple Silicon and Intel), Linux (x86_64) and Windows (x86_64) are attached to every [release](https://github.com/voidNK/SoundScene/releases/latest). Unpack the archive and run `soundscene` from a terminal.
+
+- **macOS:** the binaries aren't notarized, so Gatekeeper blocks a file downloaded through the browser. Clear the quarantine flag once with `xattr -d com.apple.quarantine soundscene`.
+- **Linux:** needs ALSA at runtime (`libasound2` on Debian/Ubuntu, `alsa-lib` on Fedora/Arch). PipeWire and PulseAudio setups provide it through their ALSA plugins.
+- **Windows:** use Windows Terminal or another terminal with truecolor support. The old console host shows garbage.
+
+`--tap` is macOS-only. On the other platforms, use an input device or a loopback device.
+
 ## Building
 
-You need a recent stable Rust toolchain (edition 2024).
+You need a recent stable Rust toolchain (edition 2024). On Linux you also need the ALSA headers (`libasound2-dev` on Debian/Ubuntu).
 
 ```sh
 cargo build --release
@@ -77,7 +91,7 @@ The easiest way in is to just start it without any arguments:
 That opens a small setup screen. It lists the apps that are currently playing audio (on macOS), your input devices and the demo track. The selected source gets a live level meter, so you can see right away whether anything is coming through. Below that you can set the layout (single effect or mosaic), the delay, the rotation time and the frame rate. The bottom line shows the matching command line, so next time you can skip the setup and start straight into the effects.
 
 ```
-  SoundScene  setup
+  SoundScene v0.1.0  ·  setup
 
   Audio source   apps show up here while they play audio · r refreshes
   ▸ ● App     Chrome       com.google.Chrome.helper  ▶ playing
@@ -181,6 +195,13 @@ Effects draw into an RGB buffer. Each terminal cell holds two pixels using the u
 
 The macOS app tap uses the Core Audio process tap API (`CATapDescription` + a private aggregate device). Nothing is recorded or stored. The audio is only analyzed in memory.
 
+## Releasing
+
+1. Bump `version` in `Cargo.toml` and move the `Unreleased` notes in `CHANGELOG.md` to a new version section.
+2. Commit, then tag and push: `git tag v0.2.0 && git push origin v0.2.0`.
+
+The release workflow checks that the tag matches `Cargo.toml`, builds all four targets, and publishes a GitHub release with the archives, a `SHA256SUMS.txt` and the changelog section as release notes.
+
 ## License
 
-No license has been chosen yet.
+[MIT](LICENSE)

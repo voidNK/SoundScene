@@ -27,7 +27,10 @@ impl Effect for Moire {
         let (w, h) = (c.w as f32, c.h as f32);
         let size = w.min(h).max(1.0);
         let p1 = (w * (0.5 + 0.3 * (t * 0.37).sin()), h * (0.5 + 0.3 * (t * 0.29).cos()));
-        let p2 = (w * (0.5 + 0.3 * (t * 0.23 + 2.0).cos()), h * (0.5 + 0.3 * (t * 0.31 + 1.0).sin()));
+        let p2 = (
+            w * (0.5 + 0.3 * (t * 0.23 + 2.0).cos()),
+            h * (0.5 + 0.3 * (t * 0.31 + 1.0).sin()),
+        );
         let freq = (0.6 + 0.6 * f.mid) * 64.0 / size;
         let flash = 0.7 + 0.3 * f.pulse;
 

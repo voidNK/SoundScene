@@ -13,7 +13,11 @@ impl Waterfall {
 }
 
 fn heat(v: f32) -> Rgb {
-    hsv(0.7 - 0.75 * v, (1.0 - (v - 0.8).max(0.0) * 4.0).clamp(0.2, 1.0), v.powf(0.8))
+    hsv(
+        0.7 - 0.75 * v,
+        (1.0 - (v - 0.8).max(0.0) * 4.0).clamp(0.2, 1.0),
+        v.powf(0.8),
+    )
 }
 
 impl Effect for Waterfall {

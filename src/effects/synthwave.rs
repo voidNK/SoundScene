@@ -71,7 +71,11 @@ impl Effect for Synthwave {
             let row_line = (z + self.offset).rem_euclid(1.0) < 0.12;
             for x in 0..c.w {
                 let col_line = ((x as f32 - cx) / w * 6.0 * z).rem_euclid(1.0) < 0.06;
-                let col = if row_line || col_line { rgb(glow, 0.2 * glow, 0.9 * glow) } else { rgb(0.04, 0.0, 0.08) };
+                let col = if row_line || col_line {
+                    rgb(glow, 0.2 * glow, 0.9 * glow)
+                } else {
+                    rgb(0.04, 0.0, 0.08)
+                };
                 c.set(x, y, col);
             }
         }

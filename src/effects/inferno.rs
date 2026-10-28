@@ -48,7 +48,7 @@ impl Effect for Inferno {
         }
         if f.beat {
             self.beats += 1;
-            if self.beats % 8 == 0 {
+            if self.beats.is_multiple_of(8) {
                 self.palette = (self.palette + 1) % PALETTES;
             }
         }

@@ -25,7 +25,11 @@ fn ground_color(n: f32) -> Rgb {
         (1.0, rgb(1.0, 1.0, 1.0)),
     ];
     let n = n.clamp(0.0, 1.0);
-    let i = stops.iter().rposition(|&(at, _)| at <= n).unwrap_or(0).min(stops.len() - 2);
+    let i = stops
+        .iter()
+        .rposition(|&(at, _)| at <= n)
+        .unwrap_or(0)
+        .min(stops.len() - 2);
     let ((a, ca), (b, cb)) = (stops[i], stops[i + 1]);
     mix(ca, cb, (n - a) / (b - a))
 }

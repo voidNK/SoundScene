@@ -12,8 +12,20 @@ const VERTICES: [[f32; 3]; 8] = [
     [1.0, 1.0, 1.0],
     [-1.0, 1.0, 1.0],
 ];
-const EDGES: [(usize, usize); 12] =
-    [(0, 1), (1, 2), (2, 3), (3, 0), (4, 5), (5, 6), (6, 7), (7, 4), (0, 4), (1, 5), (2, 6), (3, 7)];
+const EDGES: [(usize, usize); 12] = [
+    (0, 1),
+    (1, 2),
+    (2, 3),
+    (3, 0),
+    (4, 5),
+    (5, 6),
+    (6, 7),
+    (7, 4),
+    (0, 4),
+    (1, 5),
+    (2, 6),
+    (3, 7),
+];
 
 /// Two nested wireframe cubes spinning in opposite directions, with glow
 /// trails. Bass spins and inflates them, mids tilt them.
@@ -25,7 +37,11 @@ pub struct Cube {
 
 impl Cube {
     pub fn new() -> Self {
-        Self { ax: 0.3, ay: 0.0, hue: 0.45 }
+        Self {
+            ax: 0.3,
+            ay: 0.0,
+            hue: 0.45,
+        }
     }
 }
 

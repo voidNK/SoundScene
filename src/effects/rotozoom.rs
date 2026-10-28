@@ -11,7 +11,11 @@ pub struct Rotozoom {
 
 impl Rotozoom {
     pub fn new() -> Self {
-        Self { angle: 0.0, zoom_phase: 0.0, hue: 0.1 }
+        Self {
+            angle: 0.0,
+            zoom_phase: 0.0,
+            hue: 0.1,
+        }
     }
 }
 

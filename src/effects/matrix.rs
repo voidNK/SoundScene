@@ -11,7 +11,11 @@ pub struct Matrix {
 
 impl Matrix {
     pub fn new() -> Self {
-        Self { heads: Vec::new(), speeds: Vec::new(), rng: Rng::new(0x3A7) }
+        Self {
+            heads: Vec::new(),
+            speeds: Vec::new(),
+            rng: Rng::new(0x3A7),
+        }
     }
 }
 

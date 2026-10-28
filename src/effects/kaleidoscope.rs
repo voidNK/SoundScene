@@ -15,7 +15,11 @@ pub struct Kaleidoscope {
 
 impl Kaleidoscope {
     pub fn new() -> Self {
-        Self { rot: 0.0, phase: 0.0, hue: 0.3 }
+        Self {
+            rot: 0.0,
+            phase: 0.0,
+            hue: 0.3,
+        }
     }
 }
 

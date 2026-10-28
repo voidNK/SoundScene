@@ -151,9 +151,7 @@ impl Analyzer {
             self.bass_history.pop_front();
         }
         let avg = self.bass_history.iter().sum::<f32>() / self.bass_history.len() as f32;
-        f.beat = raw_bass > avg * 1.4
-            && raw_bass > self.bass_gain.floor * 2.0
-            && t - self.last_beat > 0.18;
+        f.beat = raw_bass > avg * 1.4 && raw_bass > self.bass_gain.floor * 2.0 && t - self.last_beat > 0.18;
         if f.beat {
             self.last_beat = t;
             f.pulse = 1.0;

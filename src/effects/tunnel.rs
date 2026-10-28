@@ -12,7 +12,11 @@ pub struct Tunnel {
 
 impl Tunnel {
     pub fn new() -> Self {
-        Self { z: 0.0, rot: 0.0, hue: 0.6 }
+        Self {
+            z: 0.0,
+            rot: 0.0,
+            hue: 0.6,
+        }
     }
 }
 

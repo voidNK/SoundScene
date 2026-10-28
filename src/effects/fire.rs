@@ -9,8 +9,14 @@ pub const PALETTES: usize = 6;
 /// yellow → white; the others permute which channel lights up first
 /// (magenta, toxic green, violet, ice blue, emerald).
 pub fn fire_color(heat: f32, palette: usize) -> Rgb {
-    const ORDERS: [[f32; 3]; PALETTES] =
-        [[0.0, 1.0, 2.0], [0.0, 2.0, 1.0], [1.0, 0.0, 2.0], [1.0, 2.0, 0.0], [2.0, 1.0, 0.0], [2.0, 0.0, 1.0]];
+    const ORDERS: [[f32; 3]; PALETTES] = [
+        [0.0, 1.0, 2.0],
+        [0.0, 2.0, 1.0],
+        [1.0, 0.0, 2.0],
+        [1.0, 2.0, 0.0],
+        [2.0, 1.0, 0.0],
+        [2.0, 0.0, 1.0],
+    ];
     let o = ORDERS[palette % PALETTES];
     let v = heat * 3.0;
     rgb(v - o[0], v - o[1], v - o[2])
@@ -26,7 +32,11 @@ pub struct FireField {
 
 impl FireField {
     pub fn new() -> Self {
-        Self { heat: Vec::new(), len: 0, depth: 0 }
+        Self {
+            heat: Vec::new(),
+            len: 0,
+            depth: 0,
+        }
     }
 
     pub fn resize(&mut self, len: usize, depth: usize) {
@@ -67,10 +77,7 @@ impl FireField {
             for x in 0..w {
                 let xl = x.saturating_sub(1);
                 let xr = (x + 1).min(w - 1);
-                let sum = self.heat[below + xl]
-                    + self.heat[below + x]
-                    + self.heat[below + xr]
-                    + self.heat[below2 + x];
+                let sum = self.heat[below + xl] + self.heat[below + x] + self.heat[below + xr] + self.heat[below2 + x];
                 let v = sum * 0.25 - cool * (0.5 + rng.f32());
                 self.heat[y * w + x] = v.max(0.0);
             }
@@ -93,7 +100,10 @@ pub struct Fire {
 
 impl Fire {
     pub fn new() -> Self {
-        Self { field: FireField::new(), rng: Rng::new(0xF1AE) }
+        Self {
+            field: FireField::new(),
+            rng: Rng::new(0xF1AE),
+        }
     }
 }
 
