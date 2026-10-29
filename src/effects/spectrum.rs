@@ -31,24 +31,24 @@ impl Effect for Spectrum {
         }
 
         let hf = c.h as f32;
-        for x in 0..c.w {
-            let bin = x * n / c.w;
-            let bar_end = (bin + 1) * c.w / n;
-            let bar_start = bin * c.w / n;
-            if bar_end - bar_start >= 3 && x == bar_end - 1 {
-                continue; // gap between bars
-            }
+        for bin in 0..n {
+            let x0 = bin * c.w / n;
+            let x1 = (bin + 1) * c.w / n;
+            // The last column of a wide bar stays empty as the gap to the next one.
+            let x_end = if x1 - x0 >= 3 { x1 - 1 } else { x1 };
             let height = ((f.spectrum[bin] * hf) as usize).min(c.h);
-            for i in 0..height {
-                let frac = i as f32 / hf;
-                c.set(
-                    x,
-                    c.h - 1 - i,
-                    hsv(0.62 - frac * 0.62 + t * 0.03, 0.85, 0.35 + 0.65 * frac),
-                );
+            let peak_y = (((1.0 - self.peaks[bin]) * (hf - 1.0)) as usize).min(c.h - 1);
+            for x in x0..x_end {
+                for i in 0..height {
+                    let frac = i as f32 / hf;
+                    c.set(
+                        x,
+                        c.h - 1 - i,
+                        hsv(0.62 - frac * 0.62 + t * 0.03, 0.85, 0.35 + 0.65 * frac),
+                    );
+                }
+                c.set(x, peak_y, [240, 240, 255]);
             }
-            let peak_y = ((1.0 - self.peaks[bin]) * (hf - 1.0)) as usize;
-            c.set(x, peak_y.min(c.h - 1), [240, 240, 255]);
         }
     }
 }
