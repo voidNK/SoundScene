@@ -34,11 +34,9 @@ impl Effect for Spectrum {
         for bin in 0..n {
             let x0 = bin * c.w / n;
             let x1 = (bin + 1) * c.w / n;
-            // The last column of a wide bar stays empty as the gap to the next one.
-            let x_end = if x1 - x0 >= 3 { x1 - 1 } else { x1 };
             let height = ((f.spectrum[bin] * hf) as usize).min(c.h);
             let peak_y = (((1.0 - self.peaks[bin]) * (hf - 1.0)) as usize).min(c.h - 1);
-            for x in x0..x_end {
+            for x in x0..x1 {
                 for i in 0..height {
                     let frac = i as f32 / hf;
                     c.set(

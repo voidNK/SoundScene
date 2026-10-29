@@ -1,6 +1,6 @@
 [package]
 name = "soundscene"
-version = "0.4.0"
+version = "0.4.2"
 edition = "2024"
 description = "Sound-reactive demoscene effects for the terminal"
 license = "MIT"

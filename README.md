@@ -202,7 +202,7 @@ The easiest way in is to just start it without any arguments:
 That opens a small setup screen. It lists the apps that are currently playing audio (on macOS), your input devices and the demo track. The selected source gets a live level meter, so you can see right away whether anything is coming through. Below that you can set the layout (single effect or mosaic), the delay, the rotation time and the frame rate. The bottom line shows the matching command line, so next time you can skip the setup and start straight into the effects.
 
 ```
-  SoundScene v0.4.0  ·  setup
+  SoundScene v0.4.2  ·  setup
 
   Audio source   apps show up here while they play audio · r refreshes
   ▸ ● App     Chrome       com.google.Chrome.helper  ▶ playing

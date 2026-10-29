@@ -4,6 +4,16 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-10-29
+
+### Fixed
+
+- Spectrum bars no longer break into thin slivers at window widths that are not a multiple of 64 pixels.
+
+### Changed
+
+- Spectrum bars sit directly next to each other, without a gap column.
+
 ## [0.4.0] - 2026-10-28
 
 ### Added
@@ -46,7 +56,8 @@ First release.
 - `--meter` to print levels and detected beats without starting the UI.
 - Auto-rotation between effects (`--interval`), adjustable frame rate (`--fps`).
 
-[Unreleased]: https://github.com/voidNK/SoundScene/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/voidNK/SoundScene/compare/v0.4.2...HEAD
+[0.4.2]: https://github.com/voidNK/SoundScene/compare/v0.4.0...v0.4.2
 [0.4.0]: https://github.com/voidNK/SoundScene/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/voidNK/SoundScene/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/voidNK/SoundScene/compare/v0.1.0...v0.2.0
