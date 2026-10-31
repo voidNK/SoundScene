@@ -2,6 +2,7 @@
 //! `Features`, normalized to roughly 0..1 via auto-gain so effects work the
 //! same for a quiet microphone and a loud loopback device.
 
+use crate::detect::{Detector, Detectors, Input};
 use rustfft::num_complex::Complex;
 use rustfft::{Fft, FftPlanner};
 use std::collections::VecDeque;
@@ -69,6 +70,9 @@ pub struct Analyzer {
     wave_gain: AutoGain,
     bass_history: VecDeque<f32>,
     last_beat: f32,
+    detectors: Detectors,
+    /// Which detector drives `features.beat` and `features.pulse`.
+    pub detector: Detector,
     pub features: Features,
 }
 
@@ -110,6 +114,8 @@ impl Analyzer {
             wave_gain: AutoGain::new(0.01),
             bass_history: VecDeque::with_capacity(BEAT_HISTORY + 1),
             last_beat: f32::NEG_INFINITY,
+            detectors: Detectors::new(FFT_SIZE / 2, hz_per_bin),
+            detector: Detector::default(),
             features: Features {
                 spectrum: vec![0.0; SPECTRUM_BINS],
                 waveform: vec![0.0; WAVEFORM_LEN],
@@ -151,12 +157,30 @@ impl Analyzer {
             self.bass_history.pop_front();
         }
         let avg = self.bass_history.iter().sum::<f32>() / self.bass_history.len() as f32;
-        f.beat = raw_bass > avg * 1.4 && raw_bass > self.bass_gain.floor * 2.0 && t - self.last_beat > 0.18;
-        if f.beat {
+        let kick = raw_bass > avg * 1.4 && raw_bass > self.bass_gain.floor * 2.0 && t - self.last_beat > 0.18;
+        if kick {
             self.last_beat = t;
+        }
+        self.detectors.update(&Input {
+            mags: &self.mags,
+            hz_per_bin: self.hz_per_bin,
+            level: raw_level,
+            kick,
+            t,
+            dt,
+        });
+        let index = Detector::ALL.iter().position(|&d| d == self.detector).unwrap_or(0);
+        f.beat = self.detectors.beats[index];
+        if f.beat {
             f.pulse = 1.0;
         } else {
-            f.pulse *= (-dt * 6.0).exp();
+            // A drop's pulse fades slower, so it hits harder.
+            let fade = if self.detector == Detector::Drop && self.detectors.drop_glow(t) {
+                2.0
+            } else {
+                6.0
+            };
+            f.pulse *= (-dt * fade).exp();
         }
 
         // Log-spaced spectrum in dB relative to the running peak, with a tilt
@@ -185,6 +209,23 @@ impl Analyzer {
         for (w, s) in f.waveform[offset..].iter_mut().zip(wave) {
             *w = (s * gain).clamp(-1.0, 1.0);
         }
+    }
+
+    /// This frame's beat for every detector, in `Detector::ALL` order.
+    #[cfg(test)]
+    pub fn detector_beats(&self) -> [bool; 9] {
+        self.detectors.beats
+    }
+
+    /// Current tempo estimate, if the music has a steady beat.
+    pub fn bpm(&self) -> Option<f32> {
+        self.detectors.bpm()
+    }
+
+    /// True on the frame the music seems to move to a new section (a drop,
+    /// a breakdown or a clear change of sound). Experimental.
+    pub fn section_change(&self) -> bool {
+        self.detectors.section_change
     }
 
     /// RMS magnitude over a frequency range.

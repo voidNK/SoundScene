@@ -4,6 +4,17 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-31
+
+### Added
+
+- Nine beat detectors that decide what counts as a beat: `kick` (the previous behavior and still the default), `onset`, `snare`, `hi-hat`, `tempo`, `bar`, `drop`, `harmony` and `loudness`. The README explains what each one listens for.
+- `e` switches to the next detector while the effects run. The status line shows the active detector, plus the tempo for `tempo` and `bar`.
+- `--detector NAME` picks the detector at startup, and `--detector-rotate off|SECONDS|events` switches detectors on their own. `events` is experimental and switches on song sections such as breakdowns and drops. Rotation is off by default.
+- Detector and detector rotation in the setup screen.
+- `--meter` prints the detected tempo and uses the chosen detector.
+- A test that runs the demo track through all detectors and checks their beat rates.
+
 ## [0.5.0] - 2026-10-31
 
 ### Added
@@ -63,7 +74,8 @@ First release.
 - `--meter` to print levels and detected beats without starting the UI.
 - Auto-rotation between effects (`--interval`), adjustable frame rate (`--fps`).
 
-[Unreleased]: https://github.com/voidNK/SoundScene/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/voidNK/SoundScene/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/voidNK/SoundScene/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/voidNK/SoundScene/compare/v0.4.2...v0.5.0
 [0.4.2]: https://github.com/voidNK/SoundScene/compare/v0.4.0...v0.4.2
 [0.4.0]: https://github.com/voidNK/SoundScene/compare/v0.3.0...v0.4.0

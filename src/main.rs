@@ -1,5 +1,6 @@
 mod analysis;
 mod audio;
+mod detect;
 mod effects;
 mod gfx;
 mod setup;
@@ -13,7 +14,9 @@ use audio::AudioSource;
 use clap::Parser;
 use crossterm::event::{self, Event, KeyCode, KeyEventKind, KeyModifiers};
 use crossterm::{cursor, execute, terminal};
+use detect::{Detector, Rotation};
 use gfx::Canvas;
+use std::fmt::Write as _;
 use std::io::{self, Write};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
@@ -59,6 +62,16 @@ struct Args {
     /// Seconds before auto-rotating to the next effect, 0 turns auto-rotation off
     #[arg(long, value_name = "SECONDS", default_value_t = 10)]
     interval: u64,
+
+    /// What counts as a beat: kick, onset, snare, hi-hat, tempo, bar, drop,
+    /// harmony or loudness. See the README for what each one listens for
+    #[arg(long, value_enum, default_value_t = Detector::Kick)]
+    detector: Detector,
+
+    /// Switch to the next detector on its own: off, every N seconds, or
+    /// "events" to switch when the music changes section (experimental)
+    #[arg(long, value_name = "off|SECONDS|events", default_value_t = Rotation::Off)]
+    detector_rotate: Rotation,
 
     /// Target frames per second
     #[arg(long, default_value_t = 30)]
@@ -106,16 +119,22 @@ fn main() -> Result<()> {
 
     let delay = (args.delay * source.sample_rate as u64 / 1000) as usize;
     if let Some(secs) = args.meter {
-        return meter(&source, secs, delay);
+        return meter(&source, secs, delay, args.detector);
     }
 
     let _guard = TerminalGuard::enter()?;
     run(&args, &source, delay)
 }
 
-fn meter(source: &AudioSource, secs: u64, delay: usize) -> Result<()> {
-    println!("{} @ {} Hz", source.label, source.sample_rate);
+fn meter(source: &AudioSource, secs: u64, delay: usize, detector: Detector) -> Result<()> {
+    println!(
+        "{} @ {} Hz, detector {}",
+        source.label,
+        source.sample_rate,
+        detector.name()
+    );
     let mut analyzer = Analyzer::new(source.sample_rate as f32);
+    analyzer.detector = detector;
     let mut samples = Vec::with_capacity(FFT_SIZE);
     let start = Instant::now();
     let mut last = start;
@@ -134,12 +153,13 @@ fn meter(source: &AudioSource, secs: u64, delay: usize) -> Result<()> {
         if f.beat || now >= next_print {
             let peak = samples.iter().fold(0.0f32, |m, s| m.max(s.abs()));
             println!(
-                "{:6.2}s  peak {peak:.4}  level {:.2}  bass {:.2}  mid {:.2}  treb {:.2}{}",
+                "{:6.2}s  peak {peak:.4}  level {:.2}  bass {:.2}  mid {:.2}  treb {:.2}  {}{}",
                 now.duration_since(start).as_secs_f32(),
                 f.level,
                 f.bass,
                 f.mid,
                 f.treble,
+                analyzer.bpm().map_or("--- bpm".to_string(), |b| format!("{b:.0} bpm")),
                 if f.beat { "  BEAT" } else { "" },
             );
             if now >= next_print {
@@ -154,6 +174,7 @@ fn run(args: &Args, source: &AudioSource, delay: usize) -> Result<()> {
     let mut effects = effects::all();
     let mut current = 0;
     let mut analyzer = Analyzer::new(source.sample_rate as f32);
+    analyzer.detector = args.detector;
     let mut canvas = Canvas::new();
     let mut samples = Vec::with_capacity(FFT_SIZE);
     let mut frame = Vec::new();
@@ -174,6 +195,7 @@ fn run(args: &Args, source: &AudioSource, delay: usize) -> Result<()> {
     let start = Instant::now();
     let mut last = start;
     let mut switched = start;
+    let mut detector_switched = start;
     let mut stdout = io::stdout().lock();
 
     loop {
@@ -202,6 +224,10 @@ fn run(args: &Args, source: &AudioSource, delay: usize) -> Result<()> {
                         return Ok(());
                     }
                     KeyCode::Char('c') => hue_step = (hue_step + 1) % 6,
+                    KeyCode::Char('e') => {
+                        analyzer.detector = analyzer.detector.next();
+                        detector_switched = Instant::now();
+                    }
                     _ => {}
                 }
             }
@@ -225,6 +251,15 @@ fn run(args: &Args, source: &AudioSource, delay: usize) -> Result<()> {
 
         source.snapshot(FFT_SIZE, delay, &mut samples);
         analyzer.update(&samples, t, dt);
+        let rotate_detector = match args.detector_rotate {
+            Rotation::Off => false,
+            Rotation::Every(secs) => secs > 0 && now.duration_since(detector_switched).as_secs() >= secs,
+            Rotation::Events => analyzer.section_change(),
+        };
+        if rotate_detector {
+            analyzer.detector = analyzer.detector.next();
+            detector_switched = now;
+        }
 
         let (cols, rows) = terminal::size()?;
         let draw_rows = rows.saturating_sub(show_hud as u16).max(1);
@@ -270,6 +305,7 @@ fn run(args: &Args, source: &AudioSource, delay: usize) -> Result<()> {
                 names,
                 remaining: interval.map(|i| i.saturating_sub(now.duration_since(switched)).as_secs()),
                 source: &source.label,
+                detector: detector_label(&analyzer, args.detector_rotate, now.duration_since(detector_switched)),
             };
             hud_line(cols as usize, &info, &analyzer.features)
         });
@@ -333,6 +369,26 @@ struct HudInfo<'a> {
     /// Seconds until the next auto-rotation, None if it is off.
     remaining: Option<u64>,
     source: &'a str,
+    /// Active beat detector, with tempo and rotation state.
+    detector: String,
+}
+
+/// "tempo 124 bpm ↻ 12s": the detector, the tempo where it matters and the
+/// time until the detector rotates.
+fn detector_label(analyzer: &Analyzer, rotation: Rotation, since: Duration) -> String {
+    let mut label = analyzer.detector.name().to_string();
+    if matches!(analyzer.detector, Detector::Tempo | Detector::Bar) {
+        match analyzer.bpm() {
+            Some(bpm) => write!(label, " {bpm:.0} bpm").unwrap(),
+            None => label.push_str(" --- bpm"),
+        }
+    }
+    match rotation {
+        Rotation::Off | Rotation::Every(0) => {}
+        Rotation::Every(secs) => write!(label, " ↻{:>2}s", secs.saturating_sub(since.as_secs())).unwrap(),
+        Rotation::Events => label.push_str(" ↻ events"),
+    }
+    label
 }
 
 fn hud_line(width: usize, info: &HudInfo, f: &Features) -> String {
@@ -345,12 +401,13 @@ fn hud_line(width: usize, info: &HudInfo, f: &Features) -> String {
         None => "rotate off".to_string(),
     };
     let mut text = format!(
-        " ←/→ {:<18} │ {next} │ bass {} mid {} treb {} {} │ {} │ m mosaic · c color · f full · h hud · q quit",
+        " ←/→ {:<18} │ {next} │ bass {} mid {} treb {} │ {} {} │ {} │ m mosaic · c color · e detector · f full · h hud · q quit",
         info.title,
         meter(f.bass),
         meter(f.mid),
         meter(f.treble),
         if f.pulse > 0.5 { '●' } else { '○' },
+        info.detector,
         info.source,
     );
     if !info.names.is_empty() {

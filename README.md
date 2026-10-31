@@ -6,7 +6,15 @@
 
 Old-school demoscene effects in your terminal, driven by whatever music you're playing.
 
-I wanted something to put on a second screen while music is running: a plasma that speeds up with the bass, a tunnel that lurches forward on every kick, a fire that gets taller when the track gets louder. It runs in any truecolor terminal, needs no GPU, and on macOS it can listen straight to a single app (like the Chrome tab playing your music) without any loopback-driver setup.
+SoundScene does three things:
+
+1. **It listens to your music.** Pick a source when it starts: a single app (like the browser tab playing your music, macOS 14.4+), system audio (Windows), any input device such as a microphone or loopback driver, or the built-in demo synth. It analyzes the sound live, with loudness, bass, mids and treble, a 64-band spectrum and the waveform, and nine switchable beat detectors decide what counts as a beat: kick, snare, hi-hat, tempo, bars, drops, chord changes and more. Every effect reacts to it.
+2. **It pays tribute to the demoscene.** Plasma, copper bars, rotozoomers, twisters, vector balls, fire, tunnels, fractals, scrollers: 197 effects in the spirit of the Amiga, C64 and PC demos that squeezed impossible graphics out of tiny machines, plus a lot of newer ideas.
+3. **It does it all in text mode.** No window, no GPU, no graphics library. Everything is drawn with characters in your terminal: each cell is split into two pixels with the `▀` half block, colored in 24-bit truecolor. Make the terminal fullscreen (press `f`), turn the font size down for more pixels, and enjoy.
+
+I wanted something to put on a second screen while music is running: a plasma that speeds up with the bass, a tunnel that lurches forward on every kick, a fire that gets taller when the track gets louder.
+
+**What you need:** a modern terminal with truecolor and Unicode support, for example iTerm2, WezTerm, kitty, Ghostty, Alacritty, Windows Terminal or GNOME Terminal. The old Windows console host does not work.
 
 ![Effects 28–36 in the 3×3 mosaic](docs/screenshots/mosaic-1.png)
 
@@ -323,6 +331,26 @@ Press `m` to see several effects at once in a 2×2, 3×3 or 4×4 grid (press aga
 |---|---|
 | ![Mosaic page 7](docs/screenshots/mosaic-2.png) | ![Mosaic page 8](docs/screenshots/mosaic-3.png) |
 
+## Beat detectors
+
+Most effects punch on a beat, so what counts as one changes the whole feel. There are nine detectors. Press `e` to switch to the next one while the effects run, pick one in the setup screen, or start with `--detector NAME`. The status line shows the active detector, with the tempo for `tempo` and `bar`.
+
+| Detector | Listens for | Good for |
+|---|---|---|
+| `kick` (default) | bass energy jumping well above its recent average | techno, house, pop: anything with a solid kick drum |
+| `onset` | any new note or hit, anywhere in the spectrum (spectral flux) | nearly everything, also music without drums: piano, guitar, classical |
+| `snare` | noisy hits in the upper mids (800 Hz–5 kHz), usually beats 2 and 4 | rock, hip-hop, breakbeats |
+| `hi-hat` | short hits above 6 kHz, fires often | fast, flickering visuals, drum & bass |
+| `tempo` | estimates the tempo and beat phase from the onsets (autocorrelation) and fires exactly on that grid, also through breaks | steady visuals that sit right on the beat |
+| `bar` | like `tempo`, but only the first beat of each 4/4 bar, found from kicks and chord changes | calmer visuals with big moves once per bar |
+| `drop` | kicks only while the track is in full swing; stays quiet through breakdowns and build-ups and hits extra hard when the drop comes | EDM, dubstep, trance |
+| `harmony` | chord and key changes, from the energy in each of the 12 pitch classes (chroma) | pop, jazz, classical, vocals |
+| `loudness` | jumps in overall loudness | speech, podcasts, live microphones |
+
+All detectors run all the time, so switching is instant and the tempo tracker is already locked in when you pick it. The detectors are heuristics: they work well on clear, rhythmic music and get less reliable with dense mixes, live recordings or free tempo.
+
+**Rotating detectors.** `--detector-rotate 30` switches to the next detector every 30 seconds. `--detector-rotate events` (experimental) switches when the music seems to move to a new section: a breakdown starts, a drop hits, or the overall sound changes clearly. Events are at least 8 seconds apart. The default is `off`, and the setup screen has the same choices.
+
 ## Download
 
 Prebuilt binaries for macOS (Apple Silicon and Intel), Linux (x86_64) and Windows (x86_64) are attached to every [release](https://github.com/voidNK/SoundScene/releases/latest). Unpack the archive and run `soundscene` from a terminal.
@@ -351,10 +379,10 @@ The easiest way in is to just start it without any arguments:
 ./target/release/soundscene
 ```
 
-That opens a small setup screen. It lists the apps that are currently playing audio (on macOS), your input devices and the demo track. The selected source gets a live level meter, so you can see right away whether anything is coming through. Below that you can set the layout (single effect or mosaic), the delay, the rotation time and the frame rate. The bottom line shows the matching command line, so next time you can skip the setup and start straight into the effects.
+That opens a small setup screen. It lists the apps that are currently playing audio (on macOS), your input devices and the demo track. The selected source gets a live level meter, so you can see right away whether anything is coming through. Below that you can set the layout (single effect or mosaic), the delay, the rotation time, the beat detector and its rotation, and the frame rate. The bottom line shows the matching command line, so next time you can skip the setup and start straight into the effects.
 
 ```
-  SoundScene v0.5.0  ·  setup
+  SoundScene v0.6.0  ·  setup
 
   Audio source   apps show up here while they play audio · r refreshes
   ▸ ● App     Chrome       com.google.Chrome.helper  ▶ playing
@@ -365,15 +393,17 @@ That opens a small setup screen. It lists the apps that are currently playing au
   Signal   ██████████··········  bass ██···  mid ██···  treb ███··  ○
 
   Settings
-    Layout    ◂  single ▸   several effects at once; m switches while running
-    Delay     ◂  200 ms ▸   hold visuals back, ~200 ms for Bluetooth headphones
-    Rotate    ◂    10 s ▸   time per effect, off = only ←/→ switch
-    FPS       ◂      30 ▸   lower it if the terminal can't keep up
+    Layout    ◂   single ▸   several effects at once; m switches while running
+    Delay     ◂   200 ms ▸   hold visuals back, ~200 ms for Bluetooth headphones
+    Rotate    ◂     10 s ▸   time per effect, off = only ←/→ switch
+    Detector  ◂     kick ▸   what counts as a beat; e switches while running
+    Det. auto ◂      off ▸   switch detectors on their own; events = on song sections (experimental)
+    FPS       ◂       30 ▸   lower it if the terminal can't keep up
 
     [ Start ]
 
   ↑/↓ move · ←/→ change · Enter select / start · Space try source · r refresh · q quit
-  while running: ←/→ effect · m mosaic · c colors · f fullscreen · h status line · q quit
+  while running: ←/→ effect · m mosaic · c colors · e detector · f fullscreen · h status line · q quit
   skip this next time:  soundscene --tap com.google.Chrome.helper --delay 200
 ```
 
@@ -438,6 +468,7 @@ Tune the value by ear until the kicks and the flashes line up.
 | `←` / `→` | previous / next effect, or page in mosaic mode (also resets the rotation timer) |
 | `m` | cycle the layout: single → 2×2 → 3×3 → 4×4 mosaic |
 | `c` | rotate the colors (hue shift in 60° steps, six presses get back to the original) |
+| `e` | next beat detector (see [Beat detectors](#beat-detectors)); also resets the detector rotation timer |
 | `f` | fullscreen: hides the status line and asks the terminal to go fullscreen (xterm window op, e.g. xterm and others that support it; elsewhere use the terminal's own shortcut, like `⌘↩` in iTerm2, `⌃⌘F` in Terminal.app or `F11` in Windows Terminal). Press again to go back |
 | `h` | toggle the status line |
 | `q`, `Esc`, `Ctrl-C` | quit |
@@ -453,14 +484,19 @@ Tune the value by ear until the kicks and the flashes line up.
     --list-devices         List input devices (and output devices on Windows) and exit
     --delay <MS>           Delay the visuals, e.g. ~200 for Bluetooth headphones (0–2000)
     --interval <SECONDS>   Seconds before auto-rotating to the next effect, 0 turns auto-rotation off [default: 10]
+    --detector <NAME>      Beat detector: kick, onset, snare, hi-hat, tempo, bar, drop, harmony, loudness [default: kick]
+    --detector-rotate <off|SECONDS|events>
+                           Switch detectors on their own, every N seconds or on song sections (experimental) [default: off]
     --fps <FPS>            Target frames per second [default: 30]
     --mosaic <N>           Show several effects at once in an N×N grid, 1–4 [default: 1]
-    --meter <SECONDS>      Print audio levels and beats instead of starting the UI
+    --meter <SECONDS>      Print audio levels, tempo and beats of the chosen detector instead of starting the UI
 ```
 
 ## Troubleshooting
 
 **Nothing moves.** Run with `--meter 5`. It prints the raw peak and the normalized levels twice a second and marks detected beats. If `peak` stays at `0.0000`, no audio is reaching the app. Check that the app you tap is actually playing, that the right device is selected, and that your terminal has the Microphone or System Audio Recording permission in System Settings → Privacy & Security.
+
+**The effects don't follow the music.** Try another beat detector with `e`. Music without a strong kick drum usually works better with `onset`, `tempo` or `harmony`, speech with `loudness`. `--meter 10 --detector tempo` shows the detected tempo and beats without the UI.
 
 **Choppy output.** Rendering is just a lot of ANSI escape codes, so the terminal does most of the work. A smaller window or `--fps 20` helps. GPU-accelerated terminals (iTerm2, kitty, WezTerm, Ghostty) cope best.
 
@@ -468,7 +504,7 @@ Tune the value by ear until the kicks and the flashes line up.
 
 ## How it works
 
-Every frame, the app takes the latest 2048 samples and runs a Hann-windowed FFT. From that it derives bass/mid/treble energy, a log-spaced spectrum, the waveform and a simple beat detector: bass energy jumping well above its recent average. All values are auto-gained against a slowly decaying peak, so a quiet microphone and a loud loopback produce similar visuals.
+Every frame, the app takes the latest 2048 samples and runs a Hann-windowed FFT. From that it derives bass/mid/treble energy, a log-spaced spectrum and the waveform. The beat detectors work on the same FFT: spectral flux per band with adaptive thresholds for onsets, snares and hi-hats, autocorrelation of the onset envelope for the tempo, a 12-bin chroma vector for chord changes, and slow energy envelopes for breakdowns and drops. All values are auto-gained against a slowly decaying peak, so a quiet microphone and a loud loopback produce similar visuals.
 
 Effects draw into an RGB buffer. Each terminal cell holds two pixels using the upper half-block character `▀`, with the foreground color as the top pixel and the background color as the bottom one. The whole frame goes out as one write of truecolor escape codes.
 

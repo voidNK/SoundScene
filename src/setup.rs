@@ -5,6 +5,7 @@
 use crate::Args;
 use crate::analysis::{Analyzer, FFT_SIZE, Features};
 use crate::audio::{self, AudioSource};
+use crate::detect::{Detector, Rotation};
 use anyhow::Result;
 use crossterm::event::{self, Event, KeyCode, KeyEventKind, KeyModifiers};
 use std::fmt::Write as _;
@@ -13,6 +14,17 @@ use std::time::{Duration, Instant};
 
 /// Choices for the rotation time in seconds; 0 = off.
 const INTERVALS: [u64; 13] = [0, 5, 10, 15, 20, 30, 45, 60, 90, 120, 180, 300, 600];
+
+/// Choices for switching the beat detector on its own.
+const ROTATIONS: [Rotation; 7] = [
+    Rotation::Off,
+    Rotation::Every(10),
+    Rotation::Every(20),
+    Rotation::Every(30),
+    Rotation::Every(60),
+    Rotation::Every(120),
+    Rotation::Events,
+];
 
 enum Choice {
     // Only discovered on macOS, where process taps exist.
@@ -147,6 +159,8 @@ enum Row {
     Layout,
     Delay,
     Interval,
+    Detector,
+    DetectorRotate,
     Fps,
     Start,
 }
@@ -167,13 +181,23 @@ struct Setup {
     mosaic: u8,
     delay: u64,
     interval: u64,
+    detector: Detector,
+    rotation: Rotation,
     fps: u32,
 }
 
 impl Setup {
     fn rows(&self) -> Vec<Row> {
         let mut rows: Vec<Row> = (0..self.choices.len()).map(Row::Source).collect();
-        rows.extend([Row::Layout, Row::Delay, Row::Interval, Row::Fps, Row::Start]);
+        rows.extend([
+            Row::Layout,
+            Row::Delay,
+            Row::Interval,
+            Row::Detector,
+            Row::DetectorRotate,
+            Row::Fps,
+            Row::Start,
+        ]);
         rows
     }
 
@@ -222,6 +246,22 @@ impl Setup {
                     .position(|&s| s >= self.interval)
                     .unwrap_or(INTERVALS.len() - 1);
                 self.interval = INTERVALS[(i as i64 + dir).clamp(0, INTERVALS.len() as i64 - 1) as usize];
+            }
+            Row::Detector => {
+                let all = Detector::ALL;
+                let i = all.iter().position(|&d| d == self.detector).unwrap_or(0) as i64;
+                self.detector = all[(i + dir).rem_euclid(all.len() as i64) as usize];
+            }
+            Row::DetectorRotate => {
+                // Snap to the nearest step first, the value may come from --detector-rotate.
+                let i = match self.rotation {
+                    Rotation::Every(secs) => ROTATIONS
+                        .iter()
+                        .position(|r| matches!(r, Rotation::Every(s) if *s >= secs))
+                        .unwrap_or(ROTATIONS.len() - 2),
+                    r => ROTATIONS.iter().position(|&x| x == r).unwrap_or(0),
+                };
+                self.rotation = ROTATIONS[(i as i64 + dir).clamp(0, ROTATIONS.len() as i64 - 1) as usize];
             }
             Row::Fps => self.fps = (self.fps as i64 + dir * 5).clamp(10, 60) as u32,
             _ => {}
@@ -275,6 +315,12 @@ impl Setup {
         }
         if self.interval != 10 {
             write!(cmd, " --interval {}", self.interval).unwrap();
+        }
+        if self.detector != Detector::Kick {
+            write!(cmd, " --detector {}", self.detector.name()).unwrap();
+        }
+        if self.rotation != Rotation::Off {
+            write!(cmd, " --detector-rotate {}", self.rotation).unwrap();
         }
         if self.fps != 30 {
             write!(cmd, " --fps {}", self.fps).unwrap();
@@ -344,7 +390,7 @@ impl Setup {
         line(&format!("  {ACCENT}Settings"));
         let setting = |row: Row, name: &str, value: String, hint: &str| {
             let (style, arrow) = marker(row);
-            format!("  {style}{arrow} {name:<9} ◂ {value:>7} ▸ \x1b[0m  {DIM}{hint}")
+            format!("  {style}{arrow} {name:<9} ◂ {value:>8} ▸ \x1b[0m  {DIM}{hint}")
         };
         let layout = if self.mosaic == 1 {
             "single".to_string()
@@ -373,6 +419,22 @@ impl Setup {
             "time per effect, off = only ←/→ switch",
         ));
         line(&setting(
+            Row::Detector,
+            "Detector",
+            self.detector.name().to_string(),
+            "what counts as a beat; e switches while running",
+        ));
+        line(&setting(
+            Row::DetectorRotate,
+            "Det. auto",
+            match self.rotation {
+                Rotation::Off | Rotation::Every(0) => "off".to_string(),
+                Rotation::Every(secs) => format!("{secs} s"),
+                Rotation::Events => "events".to_string(),
+            },
+            "switch detectors on their own; events = on song sections (experimental)",
+        ));
+        line(&setting(
             Row::Fps,
             "FPS",
             self.fps.to_string(),
@@ -386,7 +448,7 @@ impl Setup {
             "  {DIM}↑/↓ move · ←/→ change · Enter select / start · Space try source · r refresh · q quit"
         ));
         line(&format!(
-            "  {DIM}while running: ←/→ effect · m mosaic · c colors · f fullscreen · h status line · q quit"
+            "  {DIM}while running: ←/→ effect · m mosaic · c colors · e detector · f fullscreen · h status line · q quit"
         ));
         line(&format!("  {DIM}skip this next time:  \x1b[39m{}", self.command_line()));
         out.push_str("\x1b[J\x1b[?2026l");
@@ -422,6 +484,8 @@ pub fn run(mut args: Args) -> Result<Option<(AudioSource, Args)>> {
         mosaic: args.mosaic,
         delay: args.delay,
         interval: args.interval,
+        detector: args.detector,
+        rotation: args.detector_rotate,
         fps: args.fps,
     };
     setup.select(initial);
@@ -446,6 +510,8 @@ pub fn run(mut args: Args) -> Result<Option<(AudioSource, Args)>> {
                         args.mosaic = setup.mosaic;
                         args.delay = setup.delay;
                         args.interval = setup.interval;
+                        args.detector = setup.detector;
+                        args.detector_rotate = setup.rotation;
                         args.fps = setup.fps;
                         let source = setup.source.take().expect("a source is open");
                         return Ok(Some((source, args)));
@@ -456,6 +522,7 @@ pub fn run(mut args: Args) -> Result<Option<(AudioSource, Args)>> {
 
         let now = Instant::now();
         if let (Some(source), Some(analyzer)) = (&setup.source, &mut setup.analyzer) {
+            analyzer.detector = setup.detector;
             source.snapshot(FFT_SIZE, 0, &mut samples);
             analyzer.update(
                 &samples,

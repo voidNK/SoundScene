@@ -216,7 +216,7 @@ pub fn list_devices() -> Result<()> {
     Ok(())
 }
 
-struct DemoSynth {
+pub(crate) struct DemoSynth {
     sr: f32,
     n: u64,
     rng: crate::gfx::Rng,
@@ -227,7 +227,7 @@ struct DemoSynth {
 }
 
 impl DemoSynth {
-    fn new(sr: f32) -> Self {
+    pub(crate) fn new(sr: f32) -> Self {
         Self {
             sr,
             n: 0,
@@ -239,7 +239,7 @@ impl DemoSynth {
         }
     }
 
-    fn next(&mut self) -> f32 {
+    pub(crate) fn next(&mut self) -> f32 {
         const BPM: f64 = 124.0;
         let beat_len = 60.0 / BPM;
         let t = self.n as f64 / self.sr as f64;
