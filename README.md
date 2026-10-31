@@ -19,10 +19,12 @@ I wanted something to put on a second screen while music is running: a plasma th
 
 ## Effects
 
-There are 97 of them, in rotation order:
+There are 197 of them, in rotation order:
 
 ![Effects 1–49](docs/screenshots/gallery-1.png)
 ![Effects 50–97](docs/screenshots/gallery-2.png)
+![Effects 98–147](docs/screenshots/gallery-3.png)
+![Effects 148–197](docs/screenshots/gallery-4.png)
 
 ### Originals
 
@@ -161,11 +163,161 @@ There are 97 of them, in rotation order:
 | **Glitch** | RGB split, displaced blocks and tearing, bursting on every beat |
 | **Heartbeat** | ECG monitor that fires a spike on every beat, with BPM readout |
 
+### Demo classics II
+
+| Effect | Reacts to |
+|---|---|
+| **Dot Tunnel** | curving tunnel of dot rings flying at you; beats spawn brighter rings |
+| **Checkerboard** | endless perspective checkerboard floor and ceiling; bass speeds it up |
+| **Sine Distort** | colorful pattern bent by per-line sine waves; bass sets the amplitude |
+| **Dot Morph** | 3D point cloud morphing between sphere, cube, torus and spiral on beats |
+| **Infinite Zoom** | seamless dive into nested rotating shapes; loudness sets the zoom speed |
+| **Polyhedra** | flat-shaded Platonic solids taking turns; beats pump their size |
+| **Corridor** | flight down a lit corridor; bass makes the lights flicker |
+| **Reflection** | sunset mirrored in rippling water; bass stirs the ripples |
+| **Twirl** | swirl distortion around a wandering center; beats twist it harder |
+| **XOR Pattern** | scrolling, zooming XOR texture with palette cycling tinted by the spectrum |
+
+### Music and spectrum II
+
+| Effect | Reacts to |
+|---|---|
+| **Wave Ring** | the waveform wrapped around a glowing circle; the radius pumps with the bass |
+| **Spectrum Terrain** | spectrum history as a shaded mountain range rolling towards you |
+| **Mirror Bars** | spectrum bars mirrored up and down from the center line |
+| **Beat Burst** | every beat fires a particle explosion colored by the strongest band |
+| **Polar Scope** | the waveform drawn in polar coordinates as a rotating rosette |
+| **Band Balls** | a row of balls, each bouncing with the energy of its band |
+| **Spectrum Tunnel** | tunnel of rings shaped like the spectrum when they were emitted |
+| **Speaker** | loudspeaker cone pumping with the bass, shockwave rings on beats |
+| **Piano Roll** | keyboard lit per spectrum bin, notes scrolling up as colored bars |
+| **Wave Stack** | waveform history stacked into depth, colored by age |
+
+### Geometry and patterns
+
+| Effect | Reacts to |
+|---|---|
+| **Penrose** | Penrose rhombus tiling whose tiles flash with the spectrum |
+| **Guilloche** | banknote-style rosette of fine curves; mids and treble reshape it |
+| **Op Art** | warped op-art stripes bulging with the bass |
+| **Polygons** | nested rotating polygons with changing side counts; beats pulse them |
+| **String Art** | times-table cardioids of glowing lines on a circle |
+| **Girih** | Islamic star-and-polygon lattice; colors cycle on beats |
+| **Mandala** | radially symmetric mandala, each ring breathing with its own band |
+| **H-Tree** | H-fractal growing level by level; beats make it regrow |
+| **Phyllotaxis** | sunflower spiral of pulsing dots, the angle slowly detuned |
+| **Circle Packing** | circles growing until they touch; beats pop circles |
+
+### Fractals II
+
+| Effect | Reacts to |
+|---|---|
+| **Sierpinski** | endless zoom into the Sierpinski triangle; flashes on beats |
+| **Koch Snowflake** | rotating Koch snowflake whose spikes breathe with the bass |
+| **Hilbert Curve** | Hilbert curve drawn step by step, with color waves from the spectrum |
+| **Lyapunov** | slowly panning Lyapunov fractal |
+| **Tricorn** | zooming, rotating Tricorn fractal; beats shift the palette |
+| **Multibrot** | zᵈ + c with the exponent morphing between 2 and 6 |
+| **Phoenix** | Phoenix fractal whose parameters drift with the loudness |
+| **Apollonian** | Apollonian gasket of tangent circles flashing per band |
+| **Buddhabrot** | Buddhabrot nebula building up over time |
+| **Lévy Curve** | Lévy C curve morphing its fold angle, glowing |
+
+### 3D II
+
+| Effect | Reacts to |
+|---|---|
+| **Cube Grid** | grid of shaded cubes whose heights follow the spectrum |
+| **Explode** | particle sphere that bursts apart on beats and reassembles |
+| **Donut** | shaded spinning torus; the bass pumps its radius |
+| **Möbius** | rotating Möbius strip with color bands from the spectrum |
+| **Klein Bottle** | rotating figure-8 Klein bottle, depth-shaded |
+| **Spring** | coil spring squashed and stretched by the bass |
+| **Rock Field** | flight through tumbling low-poly rocks; loudness sets the speed |
+| **Ringed Planet** | planet with tilted rings that shimmer with the treble |
+| **Cube Tunnel** | tunnel of rotating cubes flying at you; beats flash it |
+| **Raytrace** | reflective spheres over a checker floor, bobbing with their bands |
+
+### Simulations II
+
+| Effect | Reacts to |
+|---|---|
+| **Double Pendulum** | chaotic double pendulums with glowing trails; beats kick them |
+| **Cloth** | hanging cloth blown by gusts from the bass |
+| **Wave Sim** | 2D wave equation with emitters driven by spectrum bands |
+| **Ising** | Ising magnet whose temperature follows the loudness |
+| **DLA** | crystal growing by diffusion-limited aggregation |
+| **Physarum** | slime-mold agents weaving glowing networks; bass boosts the trails |
+| **Smoke** | rising smoke in curl noise; beats puff out more |
+| **N-Body** | gravitating bodies with trails; beats add a mass |
+| **Jelly** | soft-body blobs bouncing and squashing with the bass |
+| **Ants** | foraging ants laying pheromone trails between nest and food |
+
+### Cellular automata
+
+| Effect | Reacts to |
+|---|---|
+| **Forest Fire** | trees grow and burn; beats strike lightning |
+| **Brian's Brain** | three-state automaton of glowing cells; bass reseeds it |
+| **Lenia** | continuous automaton of coral-like worms nudged by the music |
+| **Seeds** | explosive B2/S automaton, reseeded symmetrically on beats |
+| **Sandpile** | Abelian sandpile toppling into its fractal; loudness sets the drop rate |
+| **Rock Paper Scissors** | species chasing each other in spirals |
+| **Turmites** | two-state turmites painting the grid; beats add one |
+| **Rule Mix** | scrolling 1D automaton switching rules on beats |
+| **Crystal** | snowflake growing on a hex grid, shaped by the music |
+| **Wireworld** | electrons racing through generated circuits; beats inject more |
+
+### Nature II
+
+| Effect | Reacts to |
+|---|---|
+| **Lava Lamp** | warm blobs rising in a lava lamp; the bass heats it |
+| **Meteors** | starry sky with shooting stars on beats |
+| **Bubbles** | underwater light rays and rising bubbles; beats burst them |
+| **Jellyfish** | glowing jellyfish pulsing their bells with the bass |
+| **Grass** | meadow swaying in waves of wind; gusts from the bass |
+| **Sunset** | layered mountains with parallax; the sun glows with the loudness |
+| **Fish** | schooling fish that turn together on beats |
+| **Dunes** | desert dunes with sand blowing off the crests in a bass wind |
+| **Vines** | creeping vines whose blossoms open on beats |
+| **Leaves** | autumn leaves tumbling down; gusts from the bass |
+
+### Retro II
+
+| Effect | Reacts to |
+|---|---|
+| **Tape Loader** | 8-bit tape-loading stripes flickering with the audio |
+| **Hex Dump** | scrolling number columns, rows lit by the spectrum |
+| **Circuit** | circuit board with signal pulses racing along the traces |
+| **Teletext** | chunky block graphics in eight colors, rows flashing with the bands |
+| **Tracker** | music-tracker pattern view with per-channel volume bars |
+| **Cassette** | cassette with reels spinning at the speed of the loudness |
+| **LED Matrix** | round-LED dot-matrix panel showing the spectrum |
+| **Nixie** | nixie tubes counting level and beats |
+| **Seven Segment** | seven-segment displays with band values and a beat counter |
+| **CRT** | curved CRT screen with scanlines showing the waveform |
+
+### Abstract color
+
+| Effect | Reacts to |
+|---|---|
+| **Ink** | ink clouds blooming in water; beats drop new ink |
+| **Drips** | paint running down from the top; loudness sets the drip rate |
+| **Neon** | flickering neon shapes; beats switch the colors |
+| **Light Trails** | long-exposure light painting with fading trails |
+| **Bokeh** | soft out-of-focus light discs swelling with the bass |
+| **Prism** | white beam split into a rainbow; the audio sets intensity and spread |
+| **Halftone** | rotating halftone dot screens over a moving image |
+| **Stained Glass** | stained-glass window, each pane glowing with its band |
+| **Marble** | flowing paper-marbling bands |
+| **Color Cycle** | classic palette-cycling scene; loudness sets the speed |
+
 Effects rotate every 10 seconds (`--interval`, or `0` to turn it off). You can also flip through them with the arrow keys.
 
 ### Mosaic mode
 
-Press `m` to see several effects at once in a 2×2, 3×3 or 4×4 grid (press again to go back to a single effect), or start with `--mosaic 3`. The arrow keys and the rotation timer then move a whole page at a time. With 3×3, all 97 effects fit on eleven pages, with 4×4 on seven. Pages 7 and 8:
+Press `m` to see several effects at once in a 2×2, 3×3 or 4×4 grid (press again to go back to a single effect), or start with `--mosaic 3`. The arrow keys and the rotation timer then move a whole page at a time. With 3×3, all 197 effects fit on 22 pages, with 4×4 on 13. Two 3×3 pages:
 
 | | |
 |---|---|
@@ -202,7 +354,7 @@ The easiest way in is to just start it without any arguments:
 That opens a small setup screen. It lists the apps that are currently playing audio (on macOS), your input devices and the demo track. The selected source gets a live level meter, so you can see right away whether anything is coming through. Below that you can set the layout (single effect or mosaic), the delay, the rotation time and the frame rate. The bottom line shows the matching command line, so next time you can skip the setup and start straight into the effects.
 
 ```
-  SoundScene v0.4.2  ·  setup
+  SoundScene v0.5.0  ·  setup
 
   Audio source   apps show up here while they play audio · r refreshes
   ▸ ● App     Chrome       com.google.Chrome.helper  ▶ playing
